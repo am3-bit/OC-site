@@ -80,9 +80,15 @@
     .tag-badge { font-size: 10px; background: rgba(99, 102, 241, 0.2); color: #818cf8; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
 
     .profile-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); }
-    .profile-meta-item { display: flex; gap: 6px; }
+    .profile-meta-item { display: flex; gap: 6px; align-items: center; }
     .meta-lbl { color: var(--text-sub); width: 50px; flex-shrink: 0; }
     .meta-val { color: var(--text-main); font-weight: 500; }
+
+    /* カラーピッカーのスタイル */
+    .color-picker-wrapper { display: flex; align-items: center; gap: 8px; }
+    .color-input { -webkit-appearance: none; border: none; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; background: none; }
+    .color-input::-webkit-color-swatch-wrapper { padding: 0; }
+    .color-input::-webkit-color-swatch { border: 1px solid var(--border-color); border-radius: 50%; }
 
     .text-block-box { background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
 
@@ -213,7 +219,15 @@
         <div class="profile-meta-item"><span class="meta-lbl">誕生日:</span><span class="meta-val" id="m-birth" contenteditable="false" onblur="saveCurrentModalData()">-</span></div>
         <div class="profile-meta-item"><span class="meta-lbl">一人称:</span><span class="meta-val" id="m-first" contenteditable="false" onblur="saveCurrentModalData()">-</span></div>
         <div class="profile-meta-item"><span class="meta-lbl">二人称:</span><span class="meta-val" id="m-second" contenteditable="false" onblur="saveCurrentModalData()">-</span></div>
-        <div class="profile-meta-item"><span class="meta-lbl">イメカラ:</span><span class="meta-val" id="m-color" contenteditable="false" onblur="saveCurrentModalData()">-</span></div>
+        
+        <!-- イメカラ（文字表示 + カラーピッカーパレット） -->
+        <div class="profile-meta-item">
+          <span class="meta-lbl">イメカラ:</span>
+          <div class="color-picker-wrapper">
+            <span class="meta-val" id="m-color" contenteditable="false" onblur="saveCurrentModalData()">-</span>
+            <input type="color" class="color-input edit-controls" id="m-color-picker" onchange="onColorPickerChange(this.value)" style="display:none;">
+          </div>
+        </div>
       </div>
 
       <!-- ギャラリー -->
@@ -479,6 +493,9 @@
       document.getElementById('m-first').innerText = c.firstPerson || '-';
       document.getElementById('m-second').innerText = c.secondPerson || '-';
       document.getElementById('m-color').innerText = c.color || '-';
+      if (c.color && c.color.startsWith('#')) {
+        document.getElementById('m-color-picker').value = c.color;
+      }
       document.getElementById('m-personality').innerText = c.personality || '';
       document.getElementById('m-setting').innerText = c.setting || '';
       document.getElementById('m-song').innerText = c.song || '';
@@ -496,6 +513,12 @@
 
       renderModalGallery(c.gallery || []);
       document.getElementById('detail-modal').style.display = 'flex';
+      applyEditableState();
+    }
+
+    function onColorPickerChange(hexValue) {
+      document.getElementById('m-color').innerText = hexValue;
+      saveCurrentModalData();
     }
 
     function closeDetailModal() {
@@ -522,7 +545,7 @@
       }
     }
 
-    // Twitter風フルスクリーン画像モーダルのジェスチャー・制御
+    // Twitter風フルスクリーン画像モーダル
     const viewerModal = document.getElementById('image-viewer-modal');
     const viewerImg = document.getElementById('image-viewer-img');
     let startY = 0;
@@ -540,7 +563,6 @@
       viewerModal.style.display = 'none';
     }
 
-    // 下スライドで閉じるジェスチャーの実装
     viewerModal.addEventListener('touchstart', (e) => {
       startY = e.touches[0].clientY;
       isDragging = true;
@@ -550,7 +572,7 @@
     viewerModal.addEventListener('touchmove', (e) => {
       if (!isDragging) return;
       currentY = e.touches[0].clientY - startY;
-      if (currentY > 0) { // 下方向に引っ張った時だけ動かす
+      if (currentY > 0) {
         viewerImg.style.transform = `translateY(${currentY}px)`;
         viewerImg.style.opacity = `${1 - currentY / 300}`;
       }
@@ -560,7 +582,7 @@
       if (!isDragging) return;
       isDragging = false;
       viewerImg.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';
-      if (currentY > 100) { // 100px以上下にスライドしたら閉じる
+      if (currentY > 100) {
         closeImageViewer();
       } else {
         viewerImg.style.transform = 'translateY(0px)';
@@ -593,6 +615,11 @@
         const el = document.getElementById(id);
         if (el) el.contentEditable = isEditMode;
       });
+      // カラーピッカーの表示切替
+      const colorPicker = document.getElementById('m-color-picker');
+      if (colorPicker) {
+        colorPicker.style.display = isEditMode ? 'inline-block' : 'none';
+      }
     }
 
     function saveCurrentModalData() {
