@@ -9,7 +9,6 @@
             --bg-color: #ffffff;
             --card-bg: #ffffff;
             --text-color: #333333;
-            --accent-color: #333333;
             --border-color: #e0e0e0;
         }
         body {
@@ -27,7 +26,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             border-bottom: 2px solid #333;
             padding-bottom: 12px;
         }
@@ -36,6 +35,26 @@
         .status.online { background: #e6f4ea; color: #137333; }
         .status.error { background: #fce8e6; color: #c5221f; }
         
+        /* タブ切り替え */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            padding: 8px 16px;
+            border: 1px solid #333;
+            border-radius: 4px 4px 0 0;
+            background: #f0f0f0;
+            color: #333;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .tab-btn.active {
+            background: #333;
+            color: #fff;
+        }
+
         .controls { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
         button {
             padding: 8px 16px;
@@ -57,6 +76,9 @@
             font-size: 0.9rem;
         }
         
+        .section { display: none; }
+        .section.active { display: block; }
+
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -115,24 +137,42 @@
 
 <div class="container">
     <header>
-        <h1>CHARACTERS</h1>
+        <h1>OC Database</h1>
         <div id="status" class="status">🔄 読み込み中...</div>
     </header>
 
-    <div class="controls">
-        <button id="addBtn" onclick="openModal()">+ キャラ追加</button>
-        <button id="lockBtn" onclick="toggleLock()">🔒 編集ロック中</button>
-        <div style="margin-left: auto; display: flex; align-items: center; gap: 6px;">
-            <span style="font-size: 0.85rem;">並び替え:</span>
-            <select id="sortSelect" class="sort-select" onchange="render()">
-                <option value="default">登録順</option>
-                <option value="ageAsc">年齢順 (若い順)</option>
-                <option value="ageDesc">年齢順 (年上順)</option>
-            </select>
-        </div>
+    <!-- タブ切り替え -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('chars')">キャラクター一覧</button>
+        <button class="tab-btn" onclick="switchTab('relations')">相関図</button>
     </div>
 
-    <div id="characterGrid" class="grid"></div>
+    <!-- キャラクターセクション -->
+    <div id="charsSection" class="section active">
+        <div class="controls">
+            <button id="addBtn" onclick="openModal()">+ キャラ追加</button>
+            <button id="lockBtn" onclick="toggleLock()">🔒 編集ロック中</button>
+            <div style="margin-left: auto; display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 0.85rem;">並び替え:</span>
+                <select id="sortSelect" class="sort-select" onchange="render()">
+                    <option value="default">登録順</option>
+                    <option value="ageAsc">年齢順 (若い順)</option>
+                    <option value="ageDesc">年齢順 (年上順)</option>
+                </select>
+            </div>
+        </div>
+        <div id="characterGrid" class="grid"></div>
+    </div>
+
+    <!-- 相関図セクション -->
+    <div id="relationsSection" class="section">
+        <div class="controls">
+            <button onclick="alert('相関図の編集機能は次のアップデートで追加予定です！')">+ 関係性追加</button>
+        </div>
+        <div id="relationsContent" style="background:#fff; padding:20px; border:1px solid #e0e0e0; border-radius:6px; min-height:200px;">
+            <p style="color:#666; text-align:center; margin:40px 0;">ここに相関図が表示されます。</p>
+        </div>
+    </div>
 </div>
 
 <!-- Modal Form -->
@@ -225,6 +265,19 @@
             console.error(err);
         } finally {
             document.getElementById('saveBtn').disabled = false;
+        }
+    }
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+
+        if (tabName === 'chars') {
+            document.querySelectorAll('.tab-btn')[0].classList.add('active');
+            document.getElementById('charsSection').classList.add('active');
+        } else {
+            document.querySelectorAll('.tab-btn')[1].classList.add('active');
+            document.getElementById('relationsSection').classList.add('active');
         }
     }
 
@@ -341,7 +394,7 @@
             isUnlocked = false;
             document.getElementById('lockBtn').innerText = '🔒 編集ロック中';
         } else {
-            const pwd = prompt('編集パスワードを入力してください（初期: 1234）');
+            const pwd = prompt('編集パスワードを入力してください');
             if (pwd === '1234') {
                 isUnlocked = true;
                 document.getElementById('lockBtn').innerText = '🔓 編集モード';
