@@ -38,6 +38,11 @@
     .sort-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-sub); }
     .sort-select { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 8px; border-radius: 6px; font-size: 12px; }
 
+    /* タグフィルター */
+    .tag-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+    .tag-btn { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-sub); padding: 4px 10px; border-radius: 14px; font-size: 11px; white-space: nowrap; cursor: pointer; }
+    .tag-btn.active { background: var(--accent-color); color: white; border-color: var(--accent-color); }
+
     /* 一覧グリッド */
     .char-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
     .grid-item { cursor: pointer; text-align: center; }
@@ -62,13 +67,17 @@
     /* モーダル (詳細ポップアップ) */
     #detail-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1000; justify-content: center; align-items: center; padding: 16px; }
     .modal-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; padding: 20px; position: relative; display: flex; flex-direction: column; gap: 16px; }
-    .modal-close { position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.1); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+    .modal-close { position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.1); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; z-index: 10; }
 
     .modal-header-grid { display: grid; grid-template-columns: 100px 1fr; gap: 14px; align-items: center; }
     .modal-icon-box { width: 100px; height: 100px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color); }
     .modal-icon-box img { width: 100%; height: 100%; object-fit: cover; }
     .modal-title-area h2 { font-size: 18px; margin-bottom: 2px; }
     .modal-ruby { font-size: 11px; color: var(--text-sub); margin-bottom: 6px; }
+
+    /* タグバッジ表示 */
+    .tag-badge-container { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+    .tag-badge { font-size: 10px; background: rgba(99, 102, 241, 0.2); color: #818cf8; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
 
     .profile-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); }
     .profile-meta-item { display: flex; gap: 6px; }
@@ -79,8 +88,30 @@
 
     /* ギャラリー横スクロール */
     .horizontal-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
-    .gallery-thumb { width: 90px; height: 90px; flex-shrink: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); background: #111; cursor: pointer; }
+    .gallery-thumb { width: 90px; height: 90px; flex-shrink: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); background: #111; cursor: pointer; position: relative; }
     .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .del-img-btn { position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 10px; display: none; }
+    .edit-active .del-img-btn { display: block; }
+
+    /* Twitter風フルスクリーン画像モーダル */
+    #image-viewer-modal {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.95); z-index: 2000;
+      justify-content: center; align-items: center;
+      touch-action: none;
+    }
+    #image-viewer-img {
+      max-width: 95%; max-height: 85vh; object-fit: contain; border-radius: 8px;
+      transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+      will-change: transform, opacity;
+    }
+    .viewer-close-btn {
+      position: absolute; top: 20px; right: 20px;
+      background: rgba(255, 255, 255, 0.2); color: white;
+      border: none; width: 36px; height: 36px; border-radius: 50%;
+      font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      z-index: 2010;
+    }
 
     /* 編集用コントロール */
     .edit-controls { display: none; margin-top: 10px; flex-direction: column; gap: 6px; }
@@ -125,6 +156,8 @@
             <option value="birthday-asc">誕生日順</option>
           </select>
         </div>
+        <!-- 世界線タグタブ -->
+        <div class="tag-tabs" id="tag-tabs"></div>
       </div>
       <div class="char-grid" id="char-grid"></div>
       <button class="add-char-btn" onclick="addNewCharacter()">+ キャラクターを追加する</button>
@@ -161,7 +194,7 @@
           <img id="m-icon" src="" alt="">
         </div>
         <div class="modal-title-area">
-          <!-- 名前の上のふりがな（読み仮名） -->
+          <div class="tag-badge-container" id="m-tags-container"></div>
           <div class="modal-ruby" id="m-ruby" contenteditable="false" onblur="saveCurrentModalData()">よみがな</div>
           <h2 id="m-name" contenteditable="false" onblur="saveCurrentModalData()"></h2>
         </div>
@@ -170,6 +203,7 @@
       <div class="edit-controls">
         <label class="file-btn">アイコン画像を変更<input type="file" accept="image/*" style="display:none" onchange="uploadIcon(this)"></label>
         <input type="text" class="text-input" id="m-icon-url" placeholder="または画像URL" onchange="updateIconUrl(this.value)">
+        <input type="text" class="text-input" id="m-tags-input" placeholder="世界線タグをカンマ(,)区切りで入力 (例: MAIN, 学パロ)" onblur="saveCurrentModalData()">
       </div>
 
       <!-- プロフィール項目 -->
@@ -213,6 +247,12 @@
     </div>
   </div>
 
+  <!-- Twitter風 フルスクリーン画像ビューア -->
+  <div id="image-viewer-modal">
+    <button class="viewer-close-btn" onclick="closeImageViewer()">✕</button>
+    <img id="image-viewer-img" src="" alt="">
+  </div>
+
   <script>
     // ★★★ ご自身の JSONBin 情報に書き換えてください ★★★
     const JSONBIN_BIN_ID = "ここにBIN_IDを貼り付ける";
@@ -222,10 +262,11 @@
     let relations = [];
     let isEditMode = false;
     let activeModalId = null;
+    let activeTagFilter = 'ALL';
 
     const defaultData = [
       {
-        id: "1", createdAt: Date.now(),
+        id: "1", createdAt: Date.now(), tags: ["MAIN"],
         name: "黒宮 禄", ruby: "くろみや ろく", age: "17歳", height: "165cm", birth: "10月24日",
         firstPerson: "私", secondPerson: "お前", color: "#6366f1",
         personality: "明るく元気。", setting: "特務隊の隊長。",
@@ -250,6 +291,7 @@
         characters = JSON.parse(localStorage.getItem('oc_chars')) || defaultData;
         relations = JSON.parse(localStorage.getItem('oc_rels')) || [];
       }
+      renderTagTabs();
       renderGrid();
     }
 
@@ -280,6 +322,7 @@
       if (tabName === 'chars') {
         document.querySelectorAll('.tab-nav-btn')[0].classList.add('active');
         document.getElementById('chars-section').classList.add('active');
+        renderTagTabs();
         renderGrid();
       } else if (tabName === 'playlist') {
         document.querySelectorAll('.tab-nav-btn')[1].classList.add('active');
@@ -293,6 +336,24 @@
       }
     }
 
+    function getAllTags() {
+      const set = new Set();
+      characters.forEach(c => (c.tags || []).forEach(t => t.trim() && set.add(t.trim())));
+      return ['ALL', ...Array.from(set)];
+    }
+
+    function renderTagTabs() {
+      const tabsBox = document.getElementById('tag-tabs');
+      tabsBox.innerHTML = '';
+      getAllTags().forEach(t => {
+        const btn = document.createElement('button');
+        btn.className = `tag-btn ${activeTagFilter === t ? 'active' : ''}`;
+        btn.innerText = t === 'ALL' ? 'すべて' : `#${t}`;
+        btn.onclick = () => { activeTagFilter = t; renderTagTabs(); renderGrid(); };
+        tabsBox.appendChild(btn);
+      });
+    }
+
     function extractNum(str) {
       const m = (str || '').match(/(\d+)/);
       return m ? parseInt(m[1], 10) : 9999;
@@ -303,7 +364,8 @@
       grid.innerHTML = '';
       const sortMode = document.getElementById('sort-select').value;
 
-      let list = [...characters];
+      let list = activeTagFilter === 'ALL' ? [...characters] : characters.filter(c => (c.tags || []).includes(activeTagFilter));
+
       if (sortMode === 'name-asc') {
         list.sort((a, b) => (a.ruby || a.name || '').localeCompare(b.ruby || b.name || '', 'ja'));
       } else if (sortMode === 'height-asc') {
@@ -421,6 +483,17 @@
       document.getElementById('m-setting').innerText = c.setting || '';
       document.getElementById('m-song').innerText = c.song || '';
 
+      // タグ表示
+      const tagContainer = document.getElementById('m-tags-container');
+      tagContainer.innerHTML = '';
+      (c.tags || []).forEach(t => {
+        const b = document.createElement('span');
+        b.className = 'tag-badge';
+        b.innerText = `#${t}`;
+        tagContainer.appendChild(b);
+      });
+      document.getElementById('m-tags-input').value = (c.tags || []).join(', ');
+
       renderModalGallery(c.gallery || []);
       document.getElementById('detail-modal').style.display = 'flex';
     }
@@ -428,6 +501,7 @@
     function closeDetailModal() {
       document.getElementById('detail-modal').style.display = 'none';
       activeModalId = null;
+      renderTagTabs();
       renderGrid();
     }
 
@@ -437,13 +511,62 @@
       galleryList.forEach((url, idx) => {
         const thumb = document.createElement('div');
         thumb.className = 'gallery-thumb';
-        thumb.innerHTML = `<img src="${url}">`;
+        thumb.innerHTML = `
+          <img src="${url}" onclick="openImageViewer('${url}')">
+          <button class="del-img-btn" onclick="deleteGalleryImg(event, ${idx})">✕</button>
+        `;
         gBox.appendChild(thumb);
       });
       if (galleryList.length === 0) {
         gBox.innerHTML = `<div style="font-size:12px; color:var(--text-sub); padding:10px 0;">画像なし</div>`;
       }
     }
+
+    // Twitter風フルスクリーン画像モーダルのジェスチャー・制御
+    const viewerModal = document.getElementById('image-viewer-modal');
+    const viewerImg = document.getElementById('image-viewer-img');
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+
+    function openImageViewer(url) {
+      viewerImg.src = url;
+      viewerImg.style.transform = 'translateY(0px)';
+      viewerImg.style.opacity = '1';
+      viewerModal.style.display = 'flex';
+    }
+
+    function closeImageViewer() {
+      viewerModal.style.display = 'none';
+    }
+
+    // 下スライドで閉じるジェスチャーの実装
+    viewerModal.addEventListener('touchstart', (e) => {
+      startY = e.touches[0].clientY;
+      isDragging = true;
+      viewerImg.style.transition = 'none';
+    });
+
+    viewerModal.addEventListener('touchmove', (e) => {
+      if (!isDragging) return;
+      currentY = e.touches[0].clientY - startY;
+      if (currentY > 0) { // 下方向に引っ張った時だけ動かす
+        viewerImg.style.transform = `translateY(${currentY}px)`;
+        viewerImg.style.opacity = `${1 - currentY / 300}`;
+      }
+    });
+
+    viewerModal.addEventListener('touchend', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      viewerImg.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';
+      if (currentY > 100) { // 100px以上下にスライドしたら閉じる
+        closeImageViewer();
+      } else {
+        viewerImg.style.transform = 'translateY(0px)';
+        viewerImg.style.opacity = '1';
+      }
+    });
 
     function toggleLock() {
       isEditMode = !isEditMode;
@@ -489,6 +612,9 @@
       c.setting = document.getElementById('m-setting').innerText;
       c.song = document.getElementById('m-song').innerText;
 
+      const tagStr = document.getElementById('m-tags-input').value;
+      c.tags = tagStr.split(',').map(s => s.trim()).filter(s => s.length > 0);
+
       saveData();
     }
 
@@ -531,10 +657,21 @@
       });
     }
 
+    function deleteGalleryImg(event, idx) {
+      event.stopPropagation();
+      if (!activeModalId) return;
+      const c = characters.find(x => x.id === activeModalId);
+      if (c && c.gallery) {
+        c.gallery.splice(idx, 1);
+        saveData();
+        renderModalGallery(c.gallery);
+      }
+    }
+
     function addNewCharacter() {
       const newId = Date.now().toString();
       const newChar = {
-        id: newId, createdAt: Date.now(),
+        id: newId, createdAt: Date.now(), tags: ["MAIN"],
         name: "新規キャラ", ruby: "しんき きゃら", age: "16歳", height: "160cm", birth: "1月1日",
         firstPerson: "私", secondPerson: "あなた", color: "#6366f1",
         personality: "", setting: "", song: "",
@@ -542,6 +679,7 @@
       };
       characters.push(newChar);
       saveData();
+      renderTagTabs();
       renderGrid();
       openDetailModal(newId);
     }
