@@ -156,7 +156,7 @@
         <div class="sort-row">
           <span>並び替え</span>
           <select class="sort-select" id="sort-select" onchange="renderGrid()">
-            <option value="default">追加順 (デフォルト)</option>
+            <option value="default">追加順</option>
             <option value="name-asc">五十音順</option>
             <option value="height-asc">身長順 (低い順)</option>
             <option value="height-desc">身長順 (高い順)</option>
@@ -223,7 +223,7 @@
         
         <!-- イメカラ -->
         <div class="profile-meta-item">
-          <span class="meta-lbl">イメカラ:</span>
+          <span class="meta-lbl">イメージカラー:</span>
           <div class="color-picker-wrapper">
             <span class="meta-val" id="m-color" contenteditable="false" onblur="saveCurrentModalData()">-</span>
             <input type="color" class="color-input edit-controls" id="m-color-picker" onchange="onColorPickerChange(this.value)" style="display:none;">
@@ -608,7 +608,7 @@
       isEditMode = !isEditMode;
       const btn = document.getElementById('lock-btn');
       if (isEditMode) {
-        const pass = prompt("編集パスワードを入力してください (初期: 1234):");
+        const pass = prompt("編集パスワードを入力してください:");
         if (pass === "1234") {
           btn.innerText = "🔓 編集中";
           document.body.classList.add('edit-active');
