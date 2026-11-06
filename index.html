@@ -38,7 +38,7 @@
     .sort-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-sub); }
     .sort-select { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 8px; border-radius: 6px; font-size: 12px; }
 
-    /* タグフィルター */
+    /* タブフィルター */
     .tag-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
     .tag-btn { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-sub); padding: 4px 10px; border-radius: 14px; font-size: 11px; white-space: nowrap; cursor: pointer; }
     .tag-btn.active { background: var(--accent-color); color: white; border-color: var(--accent-color); }
@@ -90,7 +90,8 @@
     .color-input::-webkit-color-swatch-wrapper { padding: 0; }
     .color-input::-webkit-color-swatch { border: 1px solid var(--border-color); border-radius: 50%; }
 
-    .text-block-box { background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
+    .text-block-box { background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-break: break-all; }
+    .text-block-box a { color: #60a5fa; text-decoration: underline; }
 
     /* ギャラリー横スクロール */
     .horizontal-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
@@ -251,9 +252,9 @@
         <div class="text-block-box" id="m-setting" contenteditable="false" onblur="saveCurrentModalData()"></div>
       </div>
 
-      <!-- イメソン -->
+      <!-- イメソン (リンク自動変換対応) -->
       <div>
-        <div class="section-title">イメソン</div>
+        <div class="section-title">イメソン (URL入力で自動リンク化)</div>
         <div class="text-block-box" id="m-song" contenteditable="false" onblur="saveCurrentModalData()"></div>
       </div>
 
@@ -284,7 +285,7 @@
         name: "黒宮 禄", ruby: "くろみや ろく", age: "17歳", height: "165cm", birth: "10月24日",
         firstPerson: "私", secondPerson: "お前", color: "#6366f1",
         personality: "明るく元気。", setting: "特務隊の隊長。",
-        song: "寄り道 / 映秀。", icon: "https://via.placeholder.com/150", gallery: []
+        song: "寄り道 / 映秀。 https://www.youtube.com/", icon: "https://via.placeholder.com/150", gallery: []
       }
     ];
 
@@ -405,6 +406,13 @@
       });
     }
 
+    // URLを自動検知して<a>タグに変換するヘルパー
+    function linkifyText(text) {
+      if (!text) return '';
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      return text.replace(urlRegex, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">▶ 試聴する（YouTube等）</a>`);
+    }
+
     function renderPlaylist() {
       const box = document.getElementById('playlist-container');
       box.innerHTML = '';
@@ -412,7 +420,7 @@
         if (c.song) {
           const card = document.createElement('div');
           card.className = 'content-card';
-          card.innerHTML = `<div style="font-weight:bold; font-size:14px; margin-bottom:4px; color:var(--accent-color);">${c.name}</div><div style="color:var(--text-main); font-size:13px;">🎵 ${c.song}</div>`;
+          card.innerHTML = `<div style="font-weight:bold; font-size:14px; margin-bottom:6px; color:var(--accent-color);">${c.name}</div><div style="color:var(--text-main); font-size:13px; line-height:1.5;">🎵 ${linkifyText(c.song)}</div>`;
           box.appendChild(card);
         }
       });
@@ -498,7 +506,14 @@
       }
       document.getElementById('m-personality').innerText = c.personality || '';
       document.getElementById('m-setting').innerText = c.setting || '';
-      document.getElementById('m-song').innerText = c.song || '';
+      
+      // 閲覧時はリンク化、編集中は生テキストを表示するため切り替え
+      const songBox = document.getElementById('m-song');
+      if (isEditMode) {
+        songBox.innerText = c.song || '';
+      } else {
+        songBox.innerHTML = linkifyText(c.song || '');
+      }
 
       const tagContainer = document.getElementById('m-tags-container');
       tagContainer.innerHTML = '';
@@ -542,36 +557,6 @@
       if (galleryList.length === 0) {
         gBox.innerHTML = `<div style="font-size:12px; color:var(--text-sub); padding:10px 0;">画像なし</div>`;
       }
-    }
-
-    // 画像自動圧縮機能（長辺400px・JPEG画質70%に軽量化）
-    function compressImageFile(file) {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = (e) => {
-          const img = new Image();
-          img.src = e.target.result;
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const maxDim = 400;
-            let width = img.width;
-            let height = img.height;
-            if (width > height && width > maxDim) {
-              height *= maxDim / width;
-              width = maxDim;
-            } else if (height > maxDim) {
-              width *= maxDim / height;
-              height = maxDim;
-            }
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.7));
-          };
-        };
-      });
     }
 
     // Twitter風フルスクリーン画像モーダル
@@ -636,6 +621,15 @@
         document.body.classList.remove('edit-active');
       }
       applyEditableState();
+      // ロック切替時にイメソンの表示（生テキスト ⇔ リンク）を更新
+      if (activeModalId) {
+        const c = characters.find(x => x.id === activeModalId);
+        if (c) {
+          const songBox = document.getElementById('m-song');
+          songBox.innerText = isEditMode ? (c.song || '') : '';
+          if (!isEditMode) songBox.innerHTML = linkifyText(c.song || '');
+        }
+      }
     }
 
     function applyEditableState() {
@@ -713,6 +707,35 @@
         saveData();
         renderModalGallery(c.gallery);
       }
+    }
+
+    function compressImageFile(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+          const img = new Image();
+          img.src = e.target.result;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const maxDim = 400;
+            let width = img.width;
+            let height = img.height;
+            if (width > height && width > maxDim) {
+              height *= maxDim / width;
+              width = maxDim;
+            } else if (height > maxDim) {
+              width *= maxDim / height;
+              height = maxDim;
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.7));
+          };
+        };
+      });
     }
 
     function addNewCharacter() {
