@@ -1,9 +1,10 @@
+$2a$10$SPkINEcqTZs1uHx.VnMTN.k4L25HYBl7J0YzIfwnhw6lVOSWxk7bG
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>CHARACTER ARCHIVE</title>
+  <title>CHARACTER ARCHIVE (CLOUD SYNC)</title>
   <style>
     :root {
       --bg-color: #0f1115;
@@ -14,633 +15,124 @@
       --border-color: #2e333d;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
-
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      min-height: 100vh;
-      padding-bottom: 40px;
-      overflow-x: hidden;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; padding-bottom: 40px; overflow-x: hidden; }
 
     header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 20px;
-      background: rgba(15, 17, 21, 0.9);
-      backdrop-filter: blur(8px);
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      display: flex; justify-content: space-between; align-items: center; padding: 16px 20px;
+      background: rgba(15, 17, 21, 0.9); backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 100;
       border-bottom: 1px solid var(--border-color);
     }
+    h1 { font-size: 18px; letter-spacing: 2px; font-weight: 700; }
+    .header-btns { display: flex; gap: 12px; align-items: center; }
+    .icon-btn { background: none; border: none; font-size: 16px; cursor: pointer; color: var(--text-main); display: flex; align-items: center; gap: 4px; }
+    .back-btn { display: none; background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 12px; border-radius: 6px; font-size: 14px; cursor: pointer; }
 
-    h1 {
-      font-size: 18px;
-      letter-spacing: 2px;
-      font-weight: 700;
-    }
+    .sync-status { font-size: 10px; color: #10b981; margin-left: 8px; font-weight: normal; }
 
-    .header-btns {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px 16px; }
+    .controls-bar { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
+    .sort-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-sub); }
+    .sort-select { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 8px; border-radius: 6px; font-size: 12px; }
 
-    .icon-btn {
-      background: none;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .back-btn {
-      display: none;
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      color: var(--text-main);
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px 16px;
-    }
-
-    .controls-bar {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .sort-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-      color: var(--text-sub);
-    }
-
-    .sort-select {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      color: var(--text-main);
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 12px;
-    }
-
-    .tag-tabs {
-      display: flex;
-      gap: 6px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-    }
-
-    .tag-btn {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      color: var(--text-sub);
-      padding: 4px 10px;
-      border-radius: 14px;
-      font-size: 12px;
-      white-space: nowrap;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .tag-btn.active {
-      background: var(--accent-color);
-      color: white;
-      border-color: var(--accent-color);
-    }
+    .tag-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+    .tag-btn { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-sub); padding: 4px 10px; border-radius: 14px; font-size: 12px; white-space: nowrap; cursor: pointer; }
+    .tag-btn.active { background: var(--accent-color); color: white; border-color: var(--accent-color); }
 
     /* 一覧画面 */
     #list-view { display: block; }
-    .char-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-    }
+    .char-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
     .grid-item { cursor: pointer; text-align: center; }
-    .icon-wrapper {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      background: var(--card-bg);
-      border: 2px solid var(--border-color);
-      border-radius: 12px;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: transform 0.2s, border-color 0.2s;
-    }
-    .grid-item:hover .icon-wrapper {
-      transform: translateY(-2px);
-      border-color: var(--accent-color);
-    }
-    .icon-wrapper img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .char-name-label {
-      margin-top: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-main);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .char-ruby-label {
-      font-size: 10px;
-      color: var(--text-sub);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      margin-top: 1px;
-    }
+    .icon-wrapper { width: 100%; aspect-ratio: 1 / 1; background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .icon-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+    .char-name-label { margin-top: 6px; font-size: 13px; font-weight: 600; color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .char-ruby-label { font-size: 10px; color: var(--text-sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px; }
 
     /* 詳細画面 */
     #detail-view { display: none; }
-    .detail-card {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
+    .detail-card { display: flex; flex-direction: column; gap: 20px; }
+    .profile-header-box { display: grid; grid-template-columns: 110px 1fr; gap: 16px; background: var(--card-bg); border: 1px solid var(--border-color); padding: 16px; border-radius: 16px; position: relative; overflow: hidden; }
+    .profile-header-box::before { content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 5px; background: var(--char-color, var(--accent-color)); }
+    .detail-icon { width: 110px; height: 110px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); background: #252932; cursor: pointer; }
+    .detail-icon img { width: 100%; height: 100%; object-fit: cover; }
 
-    .profile-header-box {
-      display: grid;
-      grid-template-columns: 110px 1fr;
-      gap: 16px;
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      padding: 16px;
-      border-radius: 16px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .profile-header-box::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; bottom: 0;
-      width: 5px;
-      background: var(--char-color, var(--accent-color));
-    }
-
-    .detail-icon {
-      width: 110px;
-      height: 110px;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid var(--border-color);
-      background: #252932;
-      cursor: pointer;
-    }
-    .detail-icon img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .quick-profile {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 4px;
-    }
+    .quick-profile { display: flex; flex-direction: column; justify-content: center; gap: 4px; }
     .quick-profile h2 { font-size: 20px; color: var(--text-main); line-height: 1.2; }
-    
-    .detail-ruby {
-      font-size: 11px;
-      color: var(--text-sub);
-      margin-bottom: 4px;
-    }
+    .detail-ruby { font-size: 11px; color: var(--text-sub); margin-bottom: 4px; }
+    .profile-meta-grid { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+    .meta-row { display: flex; align-items: center; font-size: 13px; }
+    .meta-label { color: var(--text-sub); width: 65px; flex-shrink: 0; }
+    .meta-val { color: var(--text-main); font-weight: 500; }
 
-    .profile-meta-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-top: 4px;
-    }
-    .meta-row {
-      display: flex;
-      align-items: center;
-      font-size: 13px;
-    }
-    .meta-label {
-      color: var(--text-sub);
-      width: 65px;
-      flex-shrink: 0;
-    }
-    .meta-val {
-      color: var(--text-main);
-      font-weight: 500;
-    }
-
-    .color-picker-row {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      margin-top: 4px;
-      font-size: 12px;
-      color: var(--text-sub);
-    }
+    .color-picker-row { display: none; align-items: center; gap: 8px; margin-top: 4px; font-size: 12px; color: var(--text-sub); }
     .edit-active .color-picker-row { display: flex; }
-    .color-input {
-      -webkit-appearance: none;
-      border: none;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      cursor: pointer;
-      background: none;
-    }
+    .color-input { -webkit-appearance: none; border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; background: none; }
     .color-input::-webkit-color-swatch-wrapper { padding: 0; }
     .color-input::-webkit-color-swatch { border: 1px solid var(--border-color); border-radius: 50%; }
 
-    .char-tags-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin-bottom: 2px;
-    }
-    .tag-badge {
-      font-size: 10px;
-      background: rgba(99, 102, 241, 0.2);
-      color: #818cf8;
-      padding: 2px 6px;
-      border-radius: 4px;
-    }
+    .char-tags-container { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 2px; }
+    .tag-badge { font-size: 10px; background: rgba(99, 102, 241, 0.2); color: #818cf8; padding: 2px 6px; border-radius: 4px; }
 
-    /* ギャラリー */
-    .gallery-section {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 16px;
-    }
-    .section-title {
-      font-size: 12px;
-      letter-spacing: 1px;
-      color: var(--text-sub);
-      margin-bottom: 12px;
-      text-transform: uppercase;
-    }
-    .horizontal-scroll {
-      display: flex;
-      gap: 12px;
-      overflow-x: auto;
-      padding-bottom: 8px;
-      scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch;
-    }
-    .horizontal-scroll::-webkit-scrollbar { height: 6px; }
-    .horizontal-scroll::-webkit-scrollbar-thumb {
-      background: var(--border-color);
-      border-radius: 3px;
-    }
-    .gallery-item-wrapper {
-      flex: 0 0 75%;
-      position: relative;
-    }
-    .gallery-img {
-      width: 100%;
-      aspect-ratio: 4 / 3;
-      background: #252932;
-      border-radius: 10px;
-      overflow: hidden;
-      scroll-snap-align: start;
-      border: 1px solid var(--border-color);
-      cursor: pointer;
-    }
-    .gallery-img img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+    .gallery-section { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; }
+    .section-title { font-size: 12px; letter-spacing: 1px; color: var(--text-sub); margin-bottom: 12px; text-transform: uppercase; }
+    .horizontal-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; }
+    .gallery-item-wrapper { flex: 0 0 75%; position: relative; }
+    .gallery-img { width: 100%; aspect-ratio: 4 / 3; background: #252932; border-radius: 10px; overflow: hidden; scroll-snap-align: start; border: 1px solid var(--border-color); cursor: pointer; }
+    .gallery-img img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* イメソンセクション */
-    .song-section {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .song-item-box {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--border-color);
-    }
-    .song-item-box:last-child {
-      border-bottom: none;
-      padding-bottom: 0;
-    }
-    .song-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-    }
-    .song-label {
-      font-weight: bold;
-      color: var(--accent-color);
-      white-space: nowrap;
-      font-size: 12px;
-    }
-    .song-link a {
-      color: #60a5fa;
-      text-decoration: underline;
-      word-break: break-all;
-      font-size: 13px;
-    }
-    .del-song-btn {
-      background: rgba(239, 68, 68, 0.2);
-      color: #ef4444;
-      border: 1px solid #ef4444;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 10px;
-      cursor: pointer;
-      display: none;
-      width: fit-content;
-      margin-top: 4px;
-    }
-    .edit-active .del-song-btn { display: inline-block; }
+    .song-section { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .song-item-box { display: flex; flex-direction: column; gap: 4px; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); }
+    .song-item-box:last-child { border-bottom: none; padding-bottom: 0; }
+    .song-row { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+    .song-label { font-weight: bold; color: var(--accent-color); white-space: nowrap; font-size: 12px; }
+    .song-link a { color: #60a5fa; text-decoration: underline; word-break: break-all; font-size: 13px; }
 
-    /* 全イメソン一覧画面 */
-    #songs-archive-view {
-      display: none;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .all-song-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 14px;
-      padding: 14px;
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-    .all-song-char-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 8px;
-      overflow: hidden;
-      flex-shrink: 0;
-      border: 1px solid var(--border-color);
-      cursor: pointer;
-    }
-    .all-song-char-icon img {
-      width: 100%; height: 100%; object-fit: cover;
-    }
-    .all-song-info {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      overflow: hidden;
-    }
-    .all-song-char-name {
-      font-size: 12px;
-      color: var(--accent-color);
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .all-song-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-main);
-    }
+    #songs-archive-view { display: none; flex-direction: column; gap: 16px; }
+    .all-song-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; padding: 14px; display: flex; gap: 12px; align-items: center; }
+    .all-song-char-icon { width: 48px; height: 48px; border-radius: 8px; overflow: hidden; flex-shrink: 0; border: 1px solid var(--border-color); cursor: pointer; }
+    .all-song-char-icon img { width: 100%; height: 100%; object-fit: cover; }
+    .all-song-info { display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
+    .all-song-char-name { font-size: 12px; color: var(--accent-color); font-weight: 600; cursor: pointer; }
+    .all-song-title { font-size: 14px; font-weight: 600; color: var(--text-main); }
 
-    /* 詳細セクション */
-    .details-section {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .details-content {
-      font-size: 14px;
-      line-height: 1.7;
-      color: var(--text-main);
-      white-space: pre-wrap;
-    }
+    .details-section { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+    .details-content { font-size: 14px; line-height: 1.7; color: var(--text-main); white-space: pre-wrap; }
 
-    /* 相関図（MAP）画面 */
-    #map-view {
-      display: none;
-      position: relative;
-      width: 100%;
-      height: 70vh;
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      overflow: hidden;
-      touch-action: none;
-    }
-    #map-svg {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
-    }
-    .map-node {
-      position: absolute;
-      width: 60px;
-      text-align: center;
-      cursor: grab;
-      user-select: none;
-    }
-    .map-node-icon {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      border: 2px solid var(--accent-color);
-      overflow: hidden;
-      margin: 0 auto;
-      background: #000;
-    }
-    .map-node-icon img {
-      width: 100%; height: 100%; object-fit: cover;
-    }
-    .map-node-name {
-      font-size: 10px;
-      margin-top: 4px;
-      font-weight: 600;
-      white-space: nowrap;
-    }
+    #map-view { display: none; position: relative; width: 100%; height: 70vh; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; touch-action: none; }
+    #map-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+    .map-node { position: absolute; width: 60px; text-align: center; cursor: grab; user-select: none; }
+    .map-node-icon { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--accent-color); overflow: hidden; margin: 0 auto; background: #000; }
+    .map-node-icon img { width: 100%; height: 100%; object-fit: cover; }
+    .map-node-name { font-size: 10px; margin-top: 4px; font-weight: 600; white-space: nowrap; }
 
-    .map-edit-panel {
-      display: none;
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 12px;
-      margin-top: 12px;
-      gap: 8px;
-      flex-direction: column;
-    }
+    .map-edit-panel { display: none; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; margin-top: 12px; gap: 8px; flex-direction: column; }
     .edit-active .map-edit-panel { display: flex; }
+    .vertical-text { writing-mode: vertical-rl; text-orientation: upright; font-size: 10px; fill: #818cf8; letter-spacing: 1px; }
 
-    /* SVG内日本語縦書きスタイル */
-    .vertical-text {
-      writing-mode: vertical-rl;
-      text-orientation: upright;
-      font-size: 10px;
-      fill: #818cf8;
-      letter-spacing: 1px;
-    }
-
-    .edit-active [contenteditable="true"] {
-      outline: 2px dashed var(--accent-color);
-      outline-offset: 4px;
-      border-radius: 4px;
-    }
-    .edit-controls {
-      display: none;
-      margin-top: 8px;
-      flex-direction: column;
-      gap: 6px;
-    }
+    .edit-active [contenteditable="true"] { outline: 2px dashed var(--accent-color); outline-offset: 4px; border-radius: 4px; }
+    .edit-controls { display: none; margin-top: 8px; flex-direction: column; gap: 6px; }
     .edit-active .edit-controls { display: flex; }
 
-    .file-btn {
-      background: var(--accent-color);
-      color: white;
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 11px;
-      cursor: pointer;
-      text-align: center;
-      display: inline-block;
-    }
-    .text-input, .select-input {
-      background: #111;
-      border: 1px solid var(--border-color);
-      color: #fff;
-      padding: 6px;
-      font-size: 11px;
-      border-radius: 4px;
-      width: 100%;
-    }
-    .del-img-btn {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      background: rgba(239, 68, 68, 0.9);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      cursor: pointer;
-      font-size: 12px;
-      display: none;
-    }
+    .file-btn { background: var(--accent-color); color: white; padding: 6px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; text-align: center; display: inline-block; }
+    .text-input, .select-input { background: #111; border: 1px solid var(--border-color); color: #fff; padding: 6px; font-size: 11px; border-radius: 4px; width: 100%; }
+    .del-img-btn { position: absolute; top: 6px; right: 6px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 12px; display: none; }
     .edit-active .del-img-btn { display: block; }
-
-    .add-char-btn {
-      display: none;
-      width: 100%;
-      padding: 14px;
-      margin-top: 16px;
-      background: rgba(99, 102, 241, 0.1);
-      border: 2px dashed var(--accent-color);
-      color: var(--accent-color);
-      border-radius: 12px;
-      font-weight: 600;
-      cursor: pointer;
-    }
+    .add-char-btn { display: none; width: 100%; padding: 14px; margin-top: 16px; background: rgba(99, 102, 241, 0.1); border: 2px dashed var(--accent-color); color: var(--accent-color); border-radius: 12px; font-weight: 600; cursor: pointer; }
     .edit-active .add-char-btn { display: block; }
 
     /* モーダル */
-    #image-modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.95);
-      z-index: 1000;
-      justify-content: center;
-      align-items: center;
-      touch-action: pan-y;
-    }
-    #modal-img {
-      max-width: 90%;
-      max-height: 80vh;
-      object-fit: contain;
-      border-radius: 8px;
-      transition: transform 0.1s ease-out, opacity 0.1s ease-out;
-    }
-    .modal-close-btn {
-      position: absolute;
-      top: 20px; right: 20px;
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-      border: none;
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      font-size: 20px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1010;
-    }
-    .modal-nav-btn {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-      border: none;
-      width: 44px; height: 44px;
-      border-radius: 50%;
-      font-size: 22px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1010;
-    }
-    #modal-prev { left: 15px; }
-    #modal-next { right: 15px; }
+    #image-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 1000; justify-content: center; align-items: center; touch-action: pan-y; }
+    #modal-img { max-width: 90%; max-height: 80vh; object-fit: contain; border-radius: 8px; transition: transform 0.1s ease-out, opacity 0.1s ease-out; }
+    .modal-close-btn { position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.2); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 1010; }
+    .modal-nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255, 255, 255, 0.2); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 1010; }
+    #modal-prev { left: 15px; } #modal-next { right: 15px; }
   </style>
 </head>
 <body>
 
   <header>
     <button class="back-btn" id="back-btn" onclick="showList()">← LIST</button>
-    <h1 id="header-title">CHARACTERS</h1>
+    <h1>CHARACTERS<span class="sync-status" id="sync-status">☁ 接続中</span></h1>
     <div class="header-btns">
       <button class="icon-btn" onclick="toggleSongsArchive()">🎵 SONGS</button>
       <button class="icon-btn" id="map-toggle-btn" onclick="toggleMapView()">🕸 MAP</button>
@@ -649,7 +141,6 @@
   </header>
 
   <main class="container">
-    <!-- 1. 一覧画面 -->
     <section id="list-view">
       <div class="controls-bar">
         <div class="sort-row">
@@ -669,12 +160,10 @@
       <button class="add-char-btn" onclick="addNewCharacter()">+ キャラクターを追加</button>
     </section>
 
-    <!-- 2. 全イメソン一覧画面 -->
     <section id="songs-archive-view">
       <div id="all-songs-container"></div>
     </section>
 
-    <!-- 3. 相関図画面 -->
     <section id="map-container-section" style="display: none;">
       <div id="map-view">
         <svg id="map-svg">
@@ -697,7 +186,6 @@
       </div>
     </section>
 
-    <!-- 4. 詳細画面 -->
     <section id="detail-view">
       <div class="detail-card" id="detail-card-wrapper">
         <div class="profile-header-box" id="profile-header-box">
@@ -715,21 +203,21 @@
             <div class="edit-controls">
               <input type="text" class="text-input" id="edit-tags-input" placeholder="タグをカンマ(,)区切りで入力" onblur="saveCurrentChar()">
             </div>
-            <h2 id="detail-name" contenteditable="false" onblur="saveCurrentChar()">黒宮 禄</h2>
-            <div class="detail-ruby" id="detail-ruby" contenteditable="false" onblur="saveCurrentChar()">くろみや ろく</div>
+            <h2 id="detail-name" contenteditable="false" onblur="saveCurrentChar()"></h2>
+            <div class="detail-ruby" id="detail-ruby" contenteditable="false" onblur="saveCurrentChar()"></div>
             
             <div class="profile-meta-grid">
               <div class="meta-row">
                 <span class="meta-label">身長：</span>
-                <span class="meta-val" id="detail-height" contenteditable="false" onblur="saveCurrentChar()">165cm</span>
+                <span class="meta-val" id="detail-height" contenteditable="false" onblur="saveCurrentChar()"></span>
               </div>
               <div class="meta-row">
                 <span class="meta-label">性別：</span>
-                <span class="meta-val" id="detail-gender" contenteditable="false" onblur="saveCurrentChar()">不明</span>
+                <span class="meta-val" id="detail-gender" contenteditable="false" onblur="saveCurrentChar()"></span>
               </div>
               <div class="meta-row">
                 <span class="meta-label">誕生日：</span>
-                <span class="meta-val" id="detail-birthday" contenteditable="false" onblur="saveCurrentChar()">10月24日</span>
+                <span class="meta-val" id="detail-birthday" contenteditable="false" onblur="saveCurrentChar()"></span>
               </div>
             </div>
 
@@ -759,47 +247,38 @@
 
         <div class="details-section">
           <div class="section-title">PERSONALITY (性格)</div>
-          <div class="details-content" id="detail-personality" contenteditable="false" onblur="saveCurrentChar()">性格を入力</div>
+          <div class="details-content" id="detail-personality" contenteditable="false" onblur="saveCurrentChar()"></div>
         </div>
 
         <div class="details-section">
           <div class="section-title">SETTING (設定・背景)</div>
-          <div class="details-content" id="detail-setting" contenteditable="false" onblur="saveCurrentChar()">設定を入力</div>
+          <div class="details-content" id="detail-setting" contenteditable="false" onblur="saveCurrentChar()"></div>
         </div>
       </div>
     </section>
   </main>
 
-  <!-- Twitter風モーダル -->
   <div id="image-modal">
     <button class="modal-close-btn" onclick="closeModal()">✕</button>
     <button class="modal-nav-btn" id="modal-prev" onclick="slideModal(-1)">‹</button>
     <button class="modal-nav-btn" id="modal-next" onclick="slideModal(1)">›</button>
-    <img id="modal-img" src="" alt="Expanded Image">
+    <img id="modal-img" src="" alt="">
   </div>
 
   <script>
+    // ★★★ ここにJSONBinで取得した2つのIDとキーを貼り付けます ★★★
+    const JSONBIN_BIN_ID = "あなたのBIN_IDをここに貼り付け";
+    const JSONBIN_API_KEY = "あなたのMASTER_KEYをここに貼り付け";
+
     const defaultData = [
       {
-        id: "1",
-        createdAt: 1,
-        tags: ["MAIN"],
-        name: "黒宮 禄",
-        ruby: "くろみや ろく",
-        height: "165cm",
-        gender: "女性",
-        birthday: "10月24日",
-        color: "#6366f1",
-        icon: "https://via.placeholder.com/150",
-        gallery: ["https://via.placeholder.com/400x300/252932/ffffff?text=Illustration+1"],
+        id: "1", createdAt: 1, tags: ["MAIN"], name: "黒宮 禄", ruby: "くろみや ろく",
+        height: "165cm", gender: "女性", birthday: "10月24日", color: "#6366f1",
+        icon: "https://via.placeholder.com/150", gallery: [],
         songs: [{ title: "寄り道 / 映秀。", url: "https://www.youtube.com/" }],
-        personality: "明るく前向き。",
-        setting: "特殊部隊の隊長。",
-        mapPos: { x: 50, y: 80 }
+        personality: "明るく前向き。", setting: "特殊部隊の隊長。", mapPos: { x: 50, y: 80 }
       }
     ];
-
-    let defaultRelations = [];
 
     let characters = [];
     let relations = [];
@@ -807,75 +286,66 @@
     let currentSelectedId = null;
     let currentTagFilter = 'ALL';
     let currentSortMode = 'default';
-    let currentViewMode = 'list'; // 'list', 'map', 'detail', 'songs'
+    let currentViewMode = 'list';
 
-    const DB_NAME = "CharacterArchiveDB";
-    const STORE_NAME = "appData";
-
-    function initDB() {
-      return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, 1);
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve(request.result);
-        request.onupgradeneeded = (e) => {
-          const db = e.target.result;
-          if (!db.objectStoreNames.contains(STORE_NAME)) {
-            db.createObjectStore(STORE_NAME);
-          }
-        };
-      });
-    }
-
-    async function loadDataFromDB() {
+    // クラウド（JSONBin.io）からデータを一発取得
+    async function loadDataFromCloud() {
+      const statusEl = document.getElementById('sync-status');
+      statusEl.innerText = "☁ 同期中...";
+      
       try {
-        const db = await initDB();
-        return new Promise((resolve) => {
-          const transaction = db.transaction(STORE_NAME, "readonly");
-          const store = transaction.objectStore(STORE_NAME);
-          const reqChar = store.get("characters");
-          const reqRel = store.get("relations");
-
-          transaction.oncomplete = () => {
-            characters = reqChar.result || JSON.parse(localStorage.getItem('oc_char_data')) || defaultData;
-            relations = reqRel.result || JSON.parse(localStorage.getItem('oc_rel_data')) || defaultRelations;
-            renderTagTabs();
-            renderGrid();
-            resolve();
-          };
-          transaction.onerror = () => {
-            characters = defaultData;
-            relations = defaultRelations;
-            renderTagTabs();
-            renderGrid();
-            resolve();
-          };
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+          headers: { "X-Master-Key": JSONBIN_API_KEY }
         });
-      } catch (err) {
-        characters = defaultData;
-        relations = defaultRelations;
-        renderTagTabs();
-        renderGrid();
+        if (!res.ok) throw new Error("Fetch error");
+        const json = await res.json();
+        
+        if (json.record && json.record.characters) {
+          characters = json.record.characters;
+          relations = json.record.relations || [];
+        } else {
+          characters = defaultData;
+          relations = [];
+          saveDataToCloud();
+        }
+        statusEl.innerText = "☁ 同期完了";
+      } catch (e) {
+        console.error(e);
+        statusEl.innerText = "⚠️ オフライン";
+        characters = JSON.parse(localStorage.getItem('oc_char_data')) || defaultData;
+        relations = JSON.parse(localStorage.getItem('oc_rel_data')) || [];
       }
+      renderTagTabs();
+      renderGrid();
     }
 
-    async function saveData() {
+    // クラウドにデータをリアルタイム送信保存
+    async function saveDataToCloud() {
+      const statusEl = document.getElementById('sync-status');
+      statusEl.innerText = "☁ 保存中...";
+      
+      localStorage.setItem('oc_char_data', JSON.stringify(characters));
+      localStorage.setItem('oc_rel_data', JSON.stringify(relations));
+
       try {
-        localStorage.setItem('oc_char_data', JSON.stringify(characters));
-        localStorage.setItem('oc_rel_data', JSON.stringify(relations));
-
-        const db = await initDB();
-        const transaction = db.transaction(STORE_NAME, "readwrite");
-        const store = transaction.objectStore(STORE_NAME);
-        store.put(characters, "characters");
-        store.put(relations, "relations");
-      } catch (err) {
-        console.error("Storage error:", err);
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Master-Key": JSONBIN_API_KEY
+          },
+          body: JSON.stringify({ characters, relations })
+        });
+        if (!res.ok) throw new Error("Save error");
+        statusEl.innerText = "☁ 同期完了";
+      } catch (e) {
+        console.error(e);
+        statusEl.innerText = "⚠️ 保存失敗";
       }
     }
 
-    loadDataFromDB();
+    loadDataFromCloud();
 
-    /* 画面切り替え制御 */
     function hideAllViews() {
       document.getElementById('list-view').style.display = 'none';
       document.getElementById('detail-view').style.display = 'none';
@@ -885,9 +355,8 @@
     }
 
     function toggleMapView() {
-      if (currentViewMode === 'map') {
-        showList();
-      } else {
+      if (currentViewMode === 'map') showList();
+      else {
         hideAllViews();
         currentViewMode = 'map';
         document.getElementById('map-container-section').style.display = 'block';
@@ -899,9 +368,8 @@
     }
 
     function toggleSongsArchive() {
-      if (currentViewMode === 'songs') {
-        showList();
-      } else {
+      if (currentViewMode === 'songs') showList();
+      else {
         hideAllViews();
         currentViewMode = 'songs';
         document.getElementById('songs-archive-view').style.display = 'flex';
@@ -916,18 +384,12 @@
       let hasSong = false;
 
       characters.forEach(c => {
-        (c.songs || []).forEach((song, idx) => {
+        (c.songs || []).forEach((song) => {
           if (!song.title && !song.url) return;
           hasSong = true;
-
           const card = document.createElement('div');
           card.className = 'all-song-card';
-
-          let linkHtml = '';
-          if (song.url) {
-            linkHtml = `<div class="song-link"><a href="${song.url}" target="_blank" rel="noopener noreferrer">▶ YouTube等で試聴する</a></div>`;
-          }
-
+          let linkHtml = song.url ? `<div class="song-link"><a href="${song.url}" target="_blank" rel="noopener noreferrer">▶ YouTube等で試聴する</a></div>` : '';
           card.innerHTML = `
             <div class="all-song-char-icon" onclick="showDetail('${c.id}')"><img src="${c.icon}"></div>
             <div class="all-song-info">
@@ -939,10 +401,7 @@
           container.appendChild(card);
         });
       });
-
-      if (!hasSong) {
-        container.innerHTML = `<div style="text-align:center; color: var(--text-sub); margin-top: 40px; font-size: 13px;">登録されているイメージソングはありません</div>`;
-      }
+      if (!hasSong) container.innerHTML = `<div style="text-align:center; color: var(--text-sub); margin-top: 40px; font-size: 13px;">登録されているイメージソングはありません</div>`;
     }
 
     function renderMap() {
@@ -951,19 +410,13 @@
 
       characters.forEach((c, idx) => {
         if (!c.mapPos) c.mapPos = { x: 40 + (idx % 4) * 70, y: 50 + Math.floor(idx / 4) * 90 };
-
         const node = document.createElement('div');
         node.className = 'map-node';
         node.style.left = c.mapPos.x + 'px';
         node.style.top = c.mapPos.y + 'px';
-        node.innerHTML = `
-          <div class="map-node-icon"><img src="${c.icon}"></div>
-          <div class="map-node-name">${c.name}</div>
-        `;
+        node.innerHTML = `<div class="map-node-icon"><img src="${c.icon}"></div><div class="map-node-name">${c.name}</div>`;
 
-        let isDragging = false;
-        let startX, startY, origX, origY;
-
+        let isDragging = false, startX, startY, origX, origY;
         const onStart = (e) => {
           isDragging = false;
           const p = e.touches ? e.touches[0] : e;
@@ -988,7 +441,7 @@
             window.removeEventListener('touchmove', onMove);
             window.removeEventListener('touchend', onEnd);
             if (!isDragging) showDetail(c.id);
-            else saveData();
+            else saveDataToCloud();
           };
 
           window.addEventListener('mousemove', onMove);
@@ -1004,7 +457,6 @@
       drawMapLines();
     }
 
-    /* 縦書き対応SVG描画 */
     function drawMapLines() {
       const svg = document.getElementById('map-svg');
       const defs = svg.querySelector('defs');
@@ -1025,26 +477,20 @@
         const offsetX = Math.sin(angle) * 8;
         const offsetY = -Math.cos(angle) * 8;
 
-        const lx1 = x1 + offsetX;
-        const ly1 = y1 + offsetY;
-        const lx2 = x2 + offsetX;
-        const ly2 = y2 + offsetY;
+        const lx1 = x1 + offsetX; const ly1 = y1 + offsetY;
+        const lx2 = x2 + offsetX; const ly2 = y2 + offsetY;
 
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         line.setAttribute('x1', lx1); line.setAttribute('y1', ly1);
         line.setAttribute('x2', lx2); line.setAttribute('y2', ly2);
-        line.setAttribute('stroke', '#6366f1');
-        line.setAttribute('stroke-width', '2');
+        line.setAttribute('stroke', '#6366f1'); line.setAttribute('stroke-width', '2');
         line.setAttribute('marker-end', 'url(#arrow)');
         svg.appendChild(line);
 
         if (r.label) {
           const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-          const midX = (lx1 + lx2) / 2;
-          const midY = (ly1 + ly2) / 2;
-
-          text.setAttribute('x', midX);
-          text.setAttribute('y', midY);
+          text.setAttribute('x', (lx1 + lx2) / 2);
+          text.setAttribute('y', (ly1 + ly2) / 2);
           text.setAttribute('class', 'vertical-text');
           text.setAttribute('text-anchor', 'middle');
           text.textContent = r.label;
@@ -1070,32 +516,22 @@
       if (from === to) return alert('別のキャラを選んでください');
 
       const existing = relations.find(r => r.from === from && r.to === to);
-      if (existing) {
-        existing.label = label;
-      } else {
-        relations.push({ from, to, label });
-      }
+      if (existing) existing.label = label;
+      else relations.push({ from, to, label });
 
-      saveData();
+      saveDataToCloud();
       drawMapLines();
-      alert('関係性を設定しました！');
+      alert('関係性を保存しました！');
     }
 
-    /* モーダル */
     let currentModalImages = [];
     let currentModalIndex = 0;
-    let startX = 0, startY = 0, currentX = 0, currentY = 0;
     const modal = document.getElementById('image-modal');
     const modalImg = document.getElementById('modal-img');
 
     function openModal(urlOrList, index = 0) {
-      if (Array.isArray(urlOrList)) {
-        currentModalImages = urlOrList;
-        currentModalIndex = index;
-      } else {
-        currentModalImages = [urlOrList];
-        currentModalIndex = 0;
-      }
+      currentModalImages = Array.isArray(urlOrList) ? urlOrList : [urlOrList];
+      currentModalIndex = index;
       updateModalImage();
       modal.style.display = 'flex';
     }
@@ -1108,9 +544,6 @@
     function updateModalImage() {
       if (currentModalImages.length === 0) return;
       modalImg.src = currentModalImages[currentModalIndex];
-      modalImg.style.transform = 'translate(0px, 0px)';
-      modalImg.style.opacity = '1';
-
       document.getElementById('modal-prev').style.display = currentModalImages.length > 1 ? 'flex' : 'none';
       document.getElementById('modal-next').style.display = currentModalImages.length > 1 ? 'flex' : 'none';
     }
@@ -1122,41 +555,7 @@
       updateModalImage();
     }
 
-    function closeModal() {
-      modal.style.display = 'none';
-    }
-
-    modal.addEventListener('touchstart', (e) => {
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-    });
-
-    modal.addEventListener('touchmove', (e) => {
-      currentX = e.touches[0].clientX;
-      currentY = e.touches[0].clientY;
-      const diffX = currentX - startX;
-      const diffY = currentY - startY;
-      
-      if (Math.abs(diffY) > Math.abs(diffX)) {
-        modalImg.style.transform = `translateY(${diffY}px)`;
-      } else {
-        modalImg.style.transform = `translateX(${diffX}px)`;
-      }
-    });
-
-    modal.addEventListener('touchend', () => {
-      const diffX = currentX - startX;
-      const diffY = currentY - startY;
-
-      if (Math.abs(diffY) > 100) {
-        closeModal();
-      } else if (Math.abs(diffX) > 80 && currentModalImages.length > 1) {
-        if (diffX > 0) slideModal(-1);
-        else slideModal(1);
-      } else {
-        modalImg.style.transform = 'translate(0px, 0px)';
-      }
-    });
+    function closeModal() { modal.style.display = 'none'; }
 
     function getAllTags() {
       const tags = new Set();
@@ -1177,24 +576,17 @@
     }
 
     function extractHeightNum(text) {
-      const m = (text || '').match(/(\d+)/);
-      return m ? parseInt(m[1], 10) : 0;
+      const m = (text || '').match(/(\d+)/); return m ? parseInt(m[1], 10) : 0;
     }
-
     function extractBirthdayNum(text) {
       if (!text) return 9999;
-      const m = text.match(/(\d+)\D+(\d+)/);
-      if (!m) return 9999;
-      return parseInt(m[1], 10) * 100 + parseInt(m[2], 10);
+      const m = text.match(/(\d+)\D+(\d+)/); return m ? parseInt(m[1], 10) * 100 + parseInt(m[2], 10) : 9999;
     }
 
     function renderGrid() {
       const grid = document.getElementById('char-grid');
       grid.innerHTML = '';
-
-      let filtered = currentTagFilter === 'ALL'
-        ? [...characters]
-        : characters.filter(c => (c.tags || []).includes(currentTagFilter));
+      let filtered = currentTagFilter === 'ALL' ? [...characters] : characters.filter(c => (c.tags || []).includes(currentTagFilter));
 
       filtered.sort((a, b) => {
         if (currentSortMode === 'height-asc') return extractHeightNum(a.height) - extractHeightNum(b.height);
@@ -1208,19 +600,12 @@
         const item = document.createElement('div');
         item.className = 'grid-item';
         item.onclick = () => showDetail(c.id);
-        item.innerHTML = `
-          <div class="icon-wrapper"><img src="${c.icon}"></div>
-          <div class="char-name-label">${c.name}</div>
-          <div class="char-ruby-label">${c.ruby || ''}</div>
-        `;
+        item.innerHTML = `<div class="icon-wrapper"><img src="${c.icon}"></div><div class="char-name-label">${c.name}</div><div class="char-ruby-label">${c.ruby || ''}</div>`;
         grid.appendChild(item);
       });
     }
 
-    function changeSort(mode) {
-      currentSortMode = mode;
-      renderGrid();
-    }
+    function changeSort(mode) { currentSortMode = mode; renderGrid(); }
 
     function showDetail(id) {
       currentSelectedId = id;
@@ -1231,7 +616,6 @@
 
       document.getElementById('detail-view').style.display = 'block';
       document.getElementById('header-title').innerText = c.name;
-
       document.getElementById('detail-icon-img').src = c.icon;
       document.getElementById('edit-icon-url').value = c.icon.startsWith('data:') ? '' : c.icon;
       document.getElementById('detail-name').innerText = c.name;
@@ -1239,7 +623,7 @@
       document.getElementById('detail-height').innerText = c.height || '-';
       document.getElementById('detail-gender').innerText = c.gender || '-';
       document.getElementById('detail-birthday').innerText = c.birthday || '-';
-      document.getElementById('detail-personality').innerText = c.personality || c.bio || '';
+      document.getElementById('detail-personality').innerText = c.personality || '';
       document.getElementById('detail-setting').innerText = c.setting || '';
 
       const charColor = c.color || '#6366f1';
@@ -1256,12 +640,8 @@
       });
       document.getElementById('edit-tags-input').value = (c.tags || []).join(', ');
 
-      if (!c.songs && c.songTitle) {
-        c.songs = [{ title: c.songTitle, url: c.songUrl || '' }];
-      }
       if (!c.songs) c.songs = [];
       renderSongs(c.songs);
-
       renderGallery(c.gallery || []);
       applyEditModeState();
     }
@@ -1272,28 +652,21 @@
       if (c) {
         c.color = colorHex;
         document.getElementById('profile-header-box').style.setProperty('--char-color', colorHex);
-        saveData();
+        saveDataToCloud();
       }
     }
 
     function renderSongs(songsList) {
       const container = document.getElementById('songs-container');
       container.innerHTML = '';
-
       if (songsList.length === 0 && !isEditMode) {
         container.innerHTML = `<div style="font-size: 13px; color: var(--text-sub);">未設定</div>`;
         return;
       }
-
       songsList.forEach((song, index) => {
         const box = document.createElement('div');
         box.className = 'song-item-box';
-        
-        let linkHtml = '';
-        if (song.url && song.url.trim().length > 0) {
-          linkHtml = `<div class="song-link"><a href="${song.url}" target="_blank" rel="noopener noreferrer">▶ YouTube等で試聴する</a></div>`;
-        }
-
+        let linkHtml = song.url ? `<div class="song-link"><a href="${song.url}" target="_blank" rel="noopener noreferrer">▶ YouTube等で試聴する</a></div>` : '';
         box.innerHTML = `
           <div class="song-row">
             <span class="song-label">イメソン${songsList.length > 1 ? (index + 1) : ''}：</span>
@@ -1314,7 +687,7 @@
       if (!c) return;
       if (!c.songs) c.songs = [];
       c.songs.push({ title: "曲名 / アーティスト名", url: "" });
-      saveData();
+      saveDataToCloud();
       renderSongs(c.songs);
     }
 
@@ -1322,7 +695,7 @@
       const c = characters.find(item => item.id === currentSelectedId);
       if (!c || !c.songs) return;
       c.songs.splice(index, 1);
-      saveData();
+      saveDataToCloud();
       renderSongs(c.songs);
     }
 
@@ -1330,7 +703,7 @@
       const c = characters.find(item => item.id === currentSelectedId);
       if (!c || !c.songs || !c.songs[index]) return;
       c.songs[index][field] = value;
-      saveData();
+      saveDataToCloud();
     }
 
     function renderGallery(galleryList) {
@@ -1405,7 +778,7 @@
       const tagStr = document.getElementById('edit-tags-input').value;
       c.tags = tagStr.split(',').map(s => s.trim()).filter(s => s.length > 0);
 
-      saveData();
+      saveDataToCloud();
     }
 
     function uploadIconFile(input) {
@@ -1422,7 +795,7 @@
       if (c && url) {
         c.icon = url;
         document.getElementById('detail-icon-img').src = url;
-        saveData();
+        saveDataToCloud();
       }
     }
 
@@ -1439,7 +812,7 @@
           c.gallery.push(e.target.result);
           loaded++;
           if (loaded === input.files.length) {
-            saveData();
+            saveDataToCloud();
             renderGallery(c.gallery);
           }
         };
@@ -1453,7 +826,7 @@
       if (c) {
         if (!c.gallery) c.gallery = [];
         c.gallery.push(...str.split(',').map(s => s.trim()).filter(s => s.length > 0));
-        saveData();
+        saveDataToCloud();
         renderGallery(c.gallery);
       }
     }
@@ -1464,7 +837,7 @@
       const c = characters.find(item => item.id === currentSelectedId);
       if (c && c.gallery) {
         c.gallery.splice(index, 1);
-        saveData();
+        saveDataToCloud();
         renderGallery(c.gallery);
       }
     }
@@ -1472,24 +845,14 @@
     function addNewCharacter() {
       const newId = Date.now().toString();
       const newChar = {
-        id: newId,
-        createdAt: Date.now(),
-        tags: ["未分類"],
-        name: "新規キャラ",
-        ruby: "しんき きゃら",
-        height: "160cm",
-        gender: "不明",
-        birthday: "1月1日",
-        color: "#6366f1",
-        icon: "https://via.placeholder.com/150",
-        gallery: [],
+        id: newId, createdAt: Date.now(), tags: ["未分類"],
+        name: "新規キャラ", ruby: "しんき きゃら", height: "160cm", gender: "不明", birthday: "1月1日",
+        color: "#6366f1", icon: "https://via.placeholder.com/150", gallery: [],
         songs: [{ title: "曲名 / アーティスト名", url: "" }],
-        personality: "",
-        setting: "",
-        mapPos: { x: 50, y: 50 }
+        personality: "", setting: "", mapPos: { x: 50, y: 50 }
       };
       characters.push(newChar);
-      saveData();
+      saveDataToCloud();
       renderTagTabs();
       renderGrid();
       showDetail(newId);
