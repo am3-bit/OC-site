@@ -4,10 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>CHARACTER ARCHIVE</title>
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // 🔑 ここにあなたのCloud NameとPreset名をいれてね！
-    const CLOUDINARY_CLOUD_NAME = "bfknxvco";
-    const CLOUDINARY_UPLOAD_PRESET = "oc-site";
+    // 🔑 ここにSupabaseのURLとAnon Keyを貼り付けてね！
+    const SUPABASE_URL = "https://jqbbntrbvfuyvmffkthp.supabase.co/rest/v1/";
+    const SUPABASE_KEY = "sb_publishable_LiAdmm_808bLL_wWM3Todw_8_QdhDgz";
+    
+    // Supabaseクライアントの初期化
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   </script>
   <style>
     :root {
@@ -195,8 +200,8 @@
       </div>
 
       <div class="edit-controls">
-        <label class="file-btn">📁 アイコン画像を選択<input type="file" accept="image/*" style="display:none" onchange="uploadIconToCloudinary(this)"></label>
-        <div id="icon-upload-status" class="loading-text">☁️ 画像をアップロード中...</div>
+        <label class="file-btn">📁 アイコン画像を選択<input type="file" accept="image/*" style="display:none" onchange="uploadIconToSupabase(this)"></label>
+        <div id="icon-upload-status" class="loading-text">⚡ Supabaseへ送信中...</div>
         <input type="text" class="text-input" id="m-tags-input" placeholder="世界線タグをカンマ(,)区切りで入力 (例: MAIN, 学パロ)" onblur="saveCurrentModalData()">
       </div>
 
@@ -219,8 +224,8 @@
         <div class="section-title">GALLERY (イラスト)</div>
         <div class="horizontal-scroll" id="m-gallery"></div>
         <div class="edit-controls">
-          <label class="file-btn">📁 イラストを追加する (複数選択可)<input type="file" accept="image/*" multiple style="display:none" onchange="uploadGalleryToCloudinary(this)"></label>
-          <div id="gallery-upload-status" class="loading-text">☁️ イラストをアップロード中...</div>
+          <label class="file-btn">📁 イラストを追加する (複数選択可)<input type="file" accept="image/*" multiple style="display:none" onchange="uploadGalleryToSupabase(this)"></label>
+          <div id="gallery-upload-status" class="loading-text">⚡ イラストを送信中...</div>
         </div>
       </div>
 
@@ -255,18 +260,31 @@
     let activeModalId = null;
     let activeTagFilter = 'ALL';
 
-    const defaultData = [
-      {
-        id: "1", createdAt: Date.now(), tags: ["MAIN"],
-        name: "黒宮 禄", ruby: "くろみや ろく", age: "17歳", height: "165cm", birth: "10月24日",
-        firstPerson: "私", secondPerson: "お前", color: "#6366f1",
-        personality: "明るく元気。", setting: "特務隊の隊長。",
-        song: "寄り道 / 映秀。 https://www.youtube.com/", icon: "https://via.placeholder.com/150", gallery: []
+    // Supabaseにファイルを直接保存して公開URLを取得する関数
+    async function uploadFileToSupabase(file) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `uploads/${fileName}`;
+
+      const { data, error } = await supabaseClient.storage
+        .from('oc-images')
+        .upload(filePath, file);
+
+      if (error) {
+        console.error('Supabase Upload Error:', error);
+        alert(`画像アップロード失敗: ${error.message}`);
+        throw error;
       }
-    ];
+
+      const { data: publicUrlData } = supabaseClient.storage
+        .from('oc-images')
+        .getPublicUrl(filePath);
+
+      return publicUrlData.publicUrl;
+    }
 
     function loadData() {
-      characters = JSON.parse(localStorage.getItem('oc_chars')) || defaultData;
+      characters = JSON.parse(localStorage.getItem('oc_chars')) || [];
       relations = JSON.parse(localStorage.getItem('oc_rels')) || [];
       renderTagTabs();
       renderGrid();
@@ -279,30 +297,12 @@
 
     loadData();
 
-    async function sendFileToCloudinary(file) {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
-        method: 'POST',
-        body: formData
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        console.error('Cloudinary Error:', data);
-        alert(`アップロードエラー: ${data.error ? data.error.message : '認証失敗'}`);
-        throw new Error(data.error ? data.error.message : 'Upload failed');
-      }
-      return data.secure_url;
-    }
-
-    async function uploadIconToCloudinary(input) {
+    async function uploadIconToSupabase(input) {
       if (input.files && input.files[0]) {
         const statusEl = document.getElementById('icon-upload-status');
         statusEl.style.display = 'block';
         try {
-          const url = await sendFileToCloudinary(input.files[0]);
+          const url = await uploadFileToSupabase(input.files[0]);
           if (activeModalId) {
             const c = characters.find(x => x.id === activeModalId);
             if (c) {
@@ -319,7 +319,7 @@
       }
     }
 
-    async function uploadGalleryToCloudinary(input) {
+    async function uploadGalleryToSupabase(input) {
       if (!activeModalId || !input.files.length) return;
       const c = characters.find(x => x.id === activeModalId);
       if (!c) return;
@@ -330,7 +330,7 @@
 
       try {
         for (let i = 0; i < input.files.length; i++) {
-          const url = await sendFileToCloudinary(input.files[i]);
+          const url = await uploadFileToSupabase(input.files[i]);
           c.gallery.push(url);
         }
         input.value = '';
