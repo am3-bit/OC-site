@@ -262,13 +262,17 @@
 
     // Supabaseにファイルを直接保存して公開URLを取得する関数
     async function uploadFileToSupabase(file) {
+      // ファイル名が重複しないようにユニークな名前を作成
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `uploads/${fileName}`;
 
+      // oc-images バケットに直接アップロード
       const { data, error } = await supabaseClient.storage
         .from('oc-images')
-        .upload(filePath, file);
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (error) {
         console.error('Supabase Upload Error:', error);
@@ -276,9 +280,10 @@
         throw error;
       }
 
+      // 公開URLを取得
       const { data: publicUrlData } = supabaseClient.storage
         .from('oc-images')
-        .getPublicUrl(filePath);
+        .getPublicUrl(fileName);
 
       return publicUrlData.publicUrl;
     }
