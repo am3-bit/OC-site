@@ -3,15 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>CHARACTER ARCHIVE</title>
+  <title>CHARACTER ARCHIVE - Supabase Sync</title>
   <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // 🔑 ここにSupabaseのURLとAnon Keyを貼り付けてね！
+    // 🔑 あなたのSupabaseのURLとAnon Keyをここにセットしてね！
     const SUPABASE_URL = "https://jqbbntrbvfuyvmffkthp.supabase.co";
     const SUPABASE_KEY = "sb_publishable_LiAdmm_808bLL_wWM3Todw_8_QdhDgz";
     
-    // Supabaseクライアントの初期化
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   </script>
   <style>
@@ -23,33 +22,22 @@
       --text-sub: #9ca3af;
       --border-color: #2e333d;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; padding-bottom: 40px; overflow-x: hidden; }
-
-    header {
-      display: flex; justify-content: space-between; align-items: center; padding: 16px 20px;
-      background: rgba(15, 17, 21, 0.9); backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 100;
-      border-bottom: 1px solid var(--border-color);
-    }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: rgba(15, 17, 21, 0.9); backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border-color); }
     h1 { font-size: 16px; letter-spacing: 2px; font-weight: 700; }
     .header-btns { display: flex; gap: 10px; align-items: center; }
     .icon-btn { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main); font-size: 13px; cursor: pointer; padding: 6px 12px; border-radius: 6px; font-weight: bold; }
-
     .container { max-width: 600px; margin: 0 auto; padding: 20px 16px; }
-    
     .tabs-bar { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
     .tab-nav-btn { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-sub); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
     .tab-nav-btn.active { background: var(--accent-color); color: white; border-color: var(--accent-color); }
-
     .controls-bar { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
     .sort-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-sub); }
     .sort-select { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 8px; border-radius: 6px; font-size: 12px; }
-
     .tag-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
     .tag-btn { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-sub); padding: 4px 10px; border-radius: 14px; font-size: 11px; white-space: nowrap; cursor: pointer; }
     .tag-btn.active { background: var(--accent-color); color: white; border-color: var(--accent-color); }
-
     .char-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
     .grid-item { cursor: pointer; text-align: center; }
     .icon-wrapper { width: 100%; aspect-ratio: 1 / 1; background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
@@ -57,73 +45,44 @@
     .icon-wrapper img { width: 100%; height: 100%; object-fit: cover; }
     .char-name-label { margin-top: 6px; font-size: 13px; font-weight: 600; color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .char-ruby-label { font-size: 10px; color: var(--text-sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px; }
-
     .section-view { display: none; }
     .section-view.active { display: block; }
-
     .content-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
     .section-title { font-size: 11px; letter-spacing: 1px; color: var(--text-sub); margin-bottom: 8px; text-transform: uppercase; font-weight: bold; }
-
     .relation-builder { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
     .relation-row { display: flex; gap: 8px; align-items: center; }
-
     #detail-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1000; justify-content: center; align-items: center; padding: 16px; }
     .modal-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; padding: 20px; position: relative; display: flex; flex-direction: column; gap: 16px; }
     .modal-close { position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.1); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; z-index: 10; }
-
     .modal-header-grid { display: grid; grid-template-columns: 100px 1fr; gap: 14px; align-items: center; }
     .modal-icon-box { width: 100px; height: 100px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color); }
     .modal-icon-box img { width: 100%; height: 100%; object-fit: cover; }
     .modal-title-area h2 { font-size: 18px; margin-bottom: 2px; }
     .modal-ruby { font-size: 11px; color: var(--text-sub); margin-bottom: 6px; }
-
     .tag-badge-container { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
     .tag-badge { font-size: 10px; background: rgba(99, 102, 241, 0.2); color: #818cf8; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
-
     .profile-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); }
     .profile-meta-item { display: flex; gap: 6px; align-items: center; }
     .meta-lbl { color: var(--text-sub); width: 50px; flex-shrink: 0; }
     .meta-val { color: var(--text-main); font-weight: 500; }
-
     .color-picker-wrapper { display: flex; align-items: center; gap: 8px; }
     .color-input { -webkit-appearance: none; border: none; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; background: none; }
     .color-input::-webkit-color-swatch-wrapper { padding: 0; }
     .color-input::-webkit-color-swatch { border: 1px solid var(--border-color); border-radius: 50%; }
-
     .text-block-box { background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-break: break-all; }
-    .text-block-box a { color: #60a5fa; text-decoration: underline; }
-
     .horizontal-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
     .gallery-thumb { width: 90px; height: 90px; flex-shrink: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); background: #111; cursor: pointer; position: relative; }
     .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
     .del-img-btn { position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 10px; display: none; }
     .edit-active .del-img-btn { display: block; }
-
-    #image-viewer-modal {
-      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.95); z-index: 2000;
-      justify-content: center; align-items: center;
-      touch-action: none;
-    }
-    #image-viewer-img {
-      max-width: 95%; max-height: 85vh; object-fit: contain; border-radius: 8px;
-      transition: transform 0.1s ease-out, opacity 0.1s ease-out;
-      will-change: transform, opacity;
-    }
-    .viewer-close-btn {
-      position: absolute; top: 20px; right: 20px;
-      background: rgba(255, 255, 255, 0.2); color: white;
-      border: none; width: 36px; height: 36px; border-radius: 50%;
-      font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-      z-index: 2010;
-    }
-
+    #image-viewer-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 2000; justify-content: center; align-items: center; touch-action: none; }
+    #image-viewer-img { max-width: 95%; max-height: 85vh; object-fit: contain; border-radius: 8px; transition: transform 0.1s ease-out, opacity 0.1s ease-out; }
+    .viewer-close-btn { position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.2); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 2010; }
     .edit-controls { display: none; margin-top: 10px; flex-direction: column; gap: 6px; }
     .edit-active .edit-controls { display: flex; }
     .text-input, .select-input { background: #111; border: 1px solid var(--border-color); color: #fff; padding: 6px 8px; font-size: 12px; border-radius: 6px; width: 100%; }
     .file-btn { background: var(--accent-color); color: white; padding: 6px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; text-align: center; display: inline-block; font-weight: bold; }
     .edit-active [contenteditable="true"] { outline: 2px dashed var(--accent-color); outline-offset: 2px; border-radius: 4px; }
-    
     .add-char-btn { display: none; width: 100%; padding: 14px; margin-top: 16px; background: rgba(99, 102, 241, 0.1); border: 2px dashed var(--accent-color); color: var(--accent-color); border-radius: 12px; font-weight: 600; cursor: pointer; }
     .edit-active .add-char-btn { display: block; }
     .del-btn { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 6px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: bold; width: 100%; text-align: center; margin-top: 8px; display: none; }
@@ -165,10 +124,7 @@
       <button class="add-char-btn" onclick="addNewCharacter()">+ キャラクターを追加する</button>
     </section>
 
-    <section id="playlist-section" class="section-view">
-      <div id="playlist-container"></div>
-    </section>
-
+    <section id="playlist-section" class="section-view"><div id="playlist-container"></div></section>
     <section id="relations-section" class="section-view">
       <div class="relation-builder edit-controls" style="display: flex;">
         <div style="font-size: 12px; font-weight: bold; color: var(--accent-color);">🔗 キャラ同士の関係性を追加・更新</div>
@@ -187,24 +143,19 @@
   <div id="detail-modal">
     <div class="modal-card" id="modal-card-box">
       <button class="modal-close" onclick="closeDetailModal()">✕</button>
-      
       <div class="modal-header-grid">
-        <div class="modal-icon-box">
-          <img id="m-icon" src="" alt="">
-        </div>
+        <div class="modal-icon-box"><img id="m-icon" src="" alt=""></div>
         <div class="modal-title-area">
           <div class="tag-badge-container" id="m-tags-container"></div>
           <div class="modal-ruby" id="m-ruby" contenteditable="false" onblur="saveCurrentModalData()">よみがな</div>
           <h2 id="m-name" contenteditable="false" onblur="saveCurrentModalData()"></h2>
         </div>
       </div>
-
       <div class="edit-controls">
         <label class="file-btn">📁 アイコン画像を選択<input type="file" accept="image/*" style="display:none" onchange="uploadIconToSupabase(this)"></label>
         <div id="icon-upload-status" class="loading-text">⚡ Supabaseへ送信中...</div>
-        <input type="text" class="text-input" id="m-tags-input" placeholder="世界線タグをカンマ(,)区切りで入力 (例: MAIN, 学パロ)" onblur="saveCurrentModalData()">
+        <input type="text" class="text-input" id="m-tags-input" placeholder="世界線タグをカンマ(,)区切りで入力" onblur="saveCurrentModalData()">
       </div>
-
       <div class="profile-details-grid">
         <div class="profile-meta-item"><span class="meta-lbl">年齢:</span><span class="meta-val" id="m-age" contenteditable="false" onblur="saveCurrentModalData()">-</span></div>
         <div class="profile-meta-item"><span class="meta-lbl">身長:</span><span class="meta-val" id="m-height" contenteditable="false" onblur="saveCurrentModalData()">-</span></div>
@@ -219,31 +170,17 @@
           </div>
         </div>
       </div>
-
       <div>
         <div class="section-title">GALLERY (イラスト)</div>
         <div class="horizontal-scroll" id="m-gallery"></div>
         <div class="edit-controls">
-          <label class="file-btn">📁 イラストを追加する (複数選択可)<input type="file" accept="image/*" multiple style="display:none" onchange="uploadGalleryToSupabase(this)"></label>
+          <label class="file-btn">📁 イラストを追加する<input type="file" accept="image/*" multiple style="display:none" onchange="uploadGalleryToSupabase(this)"></label>
           <div id="gallery-upload-status" class="loading-text">⚡ イラストを送信中...</div>
         </div>
       </div>
-
-      <div>
-        <div class="section-title">性格</div>
-        <div class="text-block-box" id="m-personality" contenteditable="false" onblur="saveCurrentModalData()"></div>
-      </div>
-
-      <div>
-        <div class="section-title">設定・背景</div>
-        <div class="text-block-box" id="m-setting" contenteditable="false" onblur="saveCurrentModalData()"></div>
-      </div>
-
-      <div>
-        <div class="section-title">イメソン</div>
-        <div class="text-block-box" id="m-song" contenteditable="false" onblur="saveCurrentModalData()"></div>
-      </div>
-
+      <div><div class="section-title">性格</div><div class="text-block-box" id="m-personality" contenteditable="false" onblur="saveCurrentModalData()"></div></div>
+      <div><div class="section-title">設定・背景</div><div class="text-block-box" id="m-setting" contenteditable="false" onblur="saveCurrentModalData()"></div></div>
+      <div><div class="section-title">イメソン</div><div class="text-block-box" id="m-song" contenteditable="false" onblur="saveCurrentModalData()"></div></div>
       <button class="del-btn" onclick="deleteCurrentCharacter()">このキャラクターを削除する</button>
     </div>
   </div>
@@ -260,47 +197,59 @@
     let activeModalId = null;
     let activeTagFilter = 'ALL';
 
-    // Supabaseにファイルを直接保存して公開URLを取得する関数
-    async function uploadFileToSupabase(file) {
-      // ファイル名が重複しないようにユニークな名前を作成
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
-
-      // oc-images バケットに直接アップロード
-      const { data, error } = await supabaseClient.storage
-        .from('oc-images')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (error) {
-        console.error('Supabase Upload Error:', error);
-        alert(`画像アップロード失敗: ${error.message}`);
-        throw error;
+    // Supabaseからデータをクラウドロードする関数
+    async function loadData() {
+      try {
+        const { data, error } = await supabaseClient.from('characters').select('*');
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          // データベースにデータがあればクラウドから読み込む
+          const found = data.find(row => row.id === 'main_db');
+          if (found && found.data) {
+            characters = found.data.characters || [];
+            relations = found.data.relations || [];
+          }
+        }
+      } catch (e) {
+        console.error('Load Error:', e);
+        // 失敗時はローカルからフォールバック
+        characters = JSON.parse(localStorage.getItem('oc_chars')) || [];
+        relations = JSON.parse(localStorage.getItem('oc_rels')) || [];
       }
-
-      // 公開URLを取得
-      const { data: publicUrlData } = supabaseClient.storage
-        .from('oc-images')
-        .getPublicUrl(fileName);
-
-      return publicUrlData.publicUrl;
-    }
-
-    function loadData() {
-      characters = JSON.parse(localStorage.getItem('oc_chars')) || [];
-      relations = JSON.parse(localStorage.getItem('oc_rels')) || [];
       renderTagTabs();
       renderGrid();
     }
 
-    function saveData() {
+    // Supabaseのクラウドへデータを自動保存する関数
+    async function saveData() {
+      // バックアップとしてローカルにも保存
       localStorage.setItem('oc_chars', JSON.stringify(characters));
       localStorage.setItem('oc_rels', JSON.stringify(relations));
+
+      try {
+        const payload = {
+          id: 'main_db',
+          data: { characters, relations }
+        };
+        const { error } = await supabaseClient.from('characters').upsert(payload);
+        if (error) console.error('Supabase Save Error:', error);
+      } catch (e) {
+        console.error('Save Exception:', e);
+      }
     }
 
+    // 起動時にロード
     loadData();
+
+    async function uploadFileToSupabase(file) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const { data, error } = await supabaseClient.storage.from('oc-images').upload(fileName, file);
+      if (error) { alert(`画像アップロード失敗: ${error.message}`); throw error; }
+      const { data: publicUrlData } = supabaseClient.storage.from('oc-images').getPublicUrl(fileName);
+      return publicUrlData.publicUrl;
+    }
 
     async function uploadIconToSupabase(input) {
       if (input.files && input.files[0]) {
@@ -310,17 +259,9 @@
           const url = await uploadFileToSupabase(input.files[0]);
           if (activeModalId) {
             const c = characters.find(x => x.id === activeModalId);
-            if (c) {
-              c.icon = url;
-              document.getElementById('m-icon').src = url;
-              saveData();
-            }
+            if (c) { c.icon = url; document.getElementById('m-icon').src = url; await saveData(); }
           }
-        } catch (e) {
-          console.error(e);
-        } finally {
-          statusEl.style.display = 'none';
-        }
+        } finally { statusEl.style.display = 'none'; }
       }
     }
 
@@ -329,10 +270,8 @@
       const c = characters.find(x => x.id === activeModalId);
       if (!c) return;
       if (!c.gallery) c.gallery = [];
-
       const statusEl = document.getElementById('gallery-upload-status');
       statusEl.style.display = 'block';
-
       try {
         for (let i = 0; i < input.files.length; i++) {
           const url = await uploadFileToSupabase(input.files[i]);
@@ -340,23 +279,17 @@
         }
         input.value = '';
         renderModalGallery(c.gallery);
-        saveData();
-      } catch (e) {
-        console.error(e);
-      } finally {
-        statusEl.style.display = 'none';
-      }
+        await saveData();
+      } finally { statusEl.style.display = 'none'; }
     }
 
     function switchTab(tabName) {
       document.querySelectorAll('.tab-nav-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.section-view').forEach(s => s.classList.remove('active'));
-
       if (tabName === 'chars') {
         document.querySelectorAll('.tab-nav-btn')[0].classList.add('active');
         document.getElementById('chars-section').classList.add('active');
-        renderTagTabs();
-        renderGrid();
+        renderTagTabs(); renderGrid();
       } else if (tabName === 'playlist') {
         document.querySelectorAll('.tab-nav-btn')[1].classList.add('active');
         document.getElementById('playlist-section').classList.add('active');
@@ -364,8 +297,7 @@
       } else if (tabName === 'relations') {
         document.querySelectorAll('.tab-nav-btn')[2].classList.add('active');
         document.getElementById('relations-section').classList.add('active');
-        populateRelationSelects();
-        renderRelations();
+        populateRelationSelects(); renderRelations();
       }
     }
 
@@ -396,20 +328,13 @@
       const grid = document.getElementById('char-grid');
       grid.innerHTML = '';
       const sortMode = document.getElementById('sort-select').value;
-
       let list = activeTagFilter === 'ALL' ? [...characters] : characters.filter(c => (c.tags || []).includes(activeTagFilter));
 
-      if (sortMode === 'name-asc') {
-        list.sort((a, b) => (a.ruby || a.name || '').localeCompare(b.ruby || b.name || '', 'ja'));
-      } else if (sortMode === 'height-asc') {
-        list.sort((a, b) => extractNum(a.height) - extractNum(b.height));
-      } else if (sortMode === 'height-desc') {
-        list.sort((a, b) => extractNum(b.height) - extractNum(a.height));
-      } else if (sortMode === 'birthday-asc') {
-        list.sort((a, b) => (a.birth || '').localeCompare(b.birth || ''));
-      } else {
-        list.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-      }
+      if (sortMode === 'name-asc') list.sort((a, b) => (a.ruby || a.name || '').localeCompare(b.ruby || b.name || '', 'ja'));
+      else if (sortMode === 'height-asc') list.sort((a, b) => extractNum(a.height) - extractNum(b.height));
+      else if (sortMode === 'height-desc') list.sort((a, b) => extractNum(b.height) - extractNum(a.height));
+      else if (sortMode === 'birthday-asc') list.sort((a, b) => (a.birth || '').localeCompare(b.birth || ''));
+      else list.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
 
       list.forEach(c => {
         const item = document.createElement('div');
@@ -426,8 +351,7 @@
 
     function linkifyText(text) {
       if (!text) return '';
-      const urlRegex = /(https?:\/\/[^\s]+)/g;
-      return text.replace(urlRegex, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">▶ 試聴する（YouTube等）</a>`);
+      return text.replace(/(https?:\/\/[^\s]+)/g, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">▶ 試聴する（YouTube等）</a>`);
     }
 
     function renderPlaylist() {
@@ -454,19 +378,16 @@
       });
     }
 
-    function saveRelation() {
+    async function saveRelation() {
       const from = document.getElementById('rel-from').value;
       const to = document.getElementById('rel-to').value;
       const label = document.getElementById('rel-label').value.trim();
-
       if (from === to) return alert("違うキャラクターを選んでください");
       if (!label) return alert("関係性を入力してください");
-
       const existing = relations.find(r => r.from === from && r.to === to);
       if (existing) existing.label = label;
       else relations.push({ from, to, label });
-
-      saveData();
+      await saveData();
       document.getElementById('rel-label').value = '';
       renderRelations();
     }
@@ -474,32 +395,27 @@
     function renderRelations() {
       const box = document.getElementById('relations-container');
       box.innerHTML = '';
-
       relations.forEach((r, idx) => {
         const fromChar = characters.find(c => c.id === r.from);
         const toChar = characters.find(c => c.id === r.to);
         if (!fromChar || !toChar) return;
-
         const card = document.createElement('div');
         card.className = 'content-card';
         card.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="font-size:13px; font-weight:bold;">
-              <span style="color:var(--accent-color);">${fromChar.name}</span> ➔ <span style="color:var(--accent-color);">${toChar.name}</span>
-            </div>
+            <div style="font-size:13px; font-weight:bold;"><span style="color:var(--accent-color);">${fromChar.name}</span> ➔ <span style="color:var(--accent-color);">${toChar.name}</span></div>
             ${isEditMode ? `<button onclick="deleteRelation(${idx})" style="background:none; border:none; color:#ef4444; font-size:11px; cursor:pointer;">削除</button>` : ''}
           </div>
           <div style="margin-top:6px; color:var(--text-main); font-size:13px; background:rgba(0,0,0,0.2); padding:8px; border-radius:6px;">${r.label}</div>
         `;
         box.appendChild(card);
       });
-
       if (box.innerHTML === '') box.innerHTML = `<div style="text-align:center; color:var(--text-sub); margin-top:30px; font-size:13px;">登録されている関係性はありません</div>`;
     }
 
-    function deleteRelation(idx) {
+    async function deleteRelation(idx) {
       relations.splice(idx, 1);
-      saveData();
+      await saveData();
       renderRelations();
     }
 
@@ -507,7 +423,6 @@
       activeModalId = id;
       const c = characters.find(x => x.id === id);
       if (!c) return;
-
       document.getElementById('m-icon').src = c.icon || '';
       document.getElementById('m-name').innerText = c.name || '';
       document.getElementById('m-ruby').innerText = c.ruby || 'よみがな';
@@ -517,44 +432,32 @@
       document.getElementById('m-first').innerText = c.firstPerson || '-';
       document.getElementById('m-second').innerText = c.secondPerson || '-';
       document.getElementById('m-color').innerText = c.color || '-';
-      if (c.color && c.color.startsWith('#')) {
-        document.getElementById('m-color-picker').value = c.color;
-      }
+      if (c.color && c.color.startsWith('#')) document.getElementById('m-color-picker').value = c.color;
       document.getElementById('m-personality').innerText = c.personality || '';
       document.getElementById('m-setting').innerText = c.setting || '';
-      
       const songBox = document.getElementById('m-song');
-      if (isEditMode) {
-        songBox.innerText = c.song || '';
-      } else {
-        songBox.innerHTML = linkifyText(c.song || '');
-      }
-
+      songBox.innerText = isEditMode ? (c.song || '') : '';
+      if (!isEditMode) songBox.innerHTML = linkifyText(c.song || '');
       const tagContainer = document.getElementById('m-tags-container');
       tagContainer.innerHTML = '';
       (c.tags || []).forEach(t => {
-        const b = document.createElement('span');
-        b.className = 'tag-badge';
-        b.innerText = `#${t}`;
-        tagContainer.appendChild(b);
+        const b = document.createElement('span'); b.className = 'tag-badge'; b.innerText = `#${t}`; tagContainer.appendChild(b);
       });
       document.getElementById('m-tags-input').value = (c.tags || []).join(', ');
-
       renderModalGallery(c.gallery || []);
       document.getElementById('detail-modal').style.display = 'flex';
       applyEditableState();
     }
 
-    function onColorPickerChange(hexValue) {
+    async function onColorPickerChange(hexValue) {
       document.getElementById('m-color').innerText = hexValue;
-      saveCurrentModalData();
+      await saveCurrentModalData();
     }
 
     function closeDetailModal() {
       document.getElementById('detail-modal').style.display = 'none';
       activeModalId = null;
-      renderTagTabs();
-      renderGrid();
+      renderTagTabs(); renderGrid();
     }
 
     function renderModalGallery(galleryList) {
@@ -563,105 +466,38 @@
       galleryList.forEach((url, idx) => {
         const thumb = document.createElement('div');
         thumb.className = 'gallery-thumb';
-        thumb.innerHTML = `
-          <img src="${url}" onclick="openImageViewer('${url}')">
-          <button class="del-img-btn" onclick="deleteGalleryImg(event, ${idx})">✕</button>
-        `;
+        thumb.innerHTML = `<img src="${url}" onclick="openImageViewer('${url}')"><button class="del-img-btn" onclick="deleteGalleryImg(event, ${idx})">✕</button>`;
         gBox.appendChild(thumb);
       });
-      if (galleryList.length === 0) {
-        gBox.innerHTML = `<div style="font-size:12px; color:var(--text-sub); padding:10px 0;">画像なし</div>`;
-      }
+      if (galleryList.length === 0) gBox.innerHTML = `<div style="font-size:12px; color:var(--text-sub); padding:10px 0;">画像なし</div>`;
     }
 
     const viewerModal = document.getElementById('image-viewer-modal');
     const viewerImg = document.getElementById('image-viewer-img');
-    let startY = 0;
-    let currentY = 0;
-    let isDragging = false;
-
-    function openImageViewer(url) {
-      viewerImg.src = url;
-      viewerImg.style.transform = 'translateY(0px)';
-      viewerImg.style.opacity = '1';
-      viewerModal.style.display = 'flex';
-    }
-
-    function closeImageViewer() {
-      viewerModal.style.display = 'none';
-    }
-
-    viewerModal.addEventListener('touchstart', (e) => {
-      startY = e.touches[0].clientY;
-      isDragging = true;
-      viewerImg.style.transition = 'none';
-    });
-
-    viewerModal.addEventListener('touchmove', (e) => {
-      if (!isDragging) return;
-      currentY = e.touches[0].clientY - startY;
-      if (currentY > 0) {
-        viewerImg.style.transform = `translateY(${currentY}px)`;
-        viewerImg.style.opacity = `${1 - currentY / 300}`;
-      }
-    });
-
-    viewerModal.addEventListener('touchend', () => {
-      if (!isDragging) return;
-      isDragging = false;
-      viewerImg.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';
-      if (currentY > 100) {
-        closeImageViewer();
-      } else {
-        viewerImg.style.transform = 'translateY(0px)';
-        viewerImg.style.opacity = '1';
-      }
-    });
+    function openImageViewer(url) { viewerImg.src = url; viewerModal.style.display = 'flex'; }
+    function closeImageViewer() { viewerModal.style.display = 'none'; }
 
     function toggleLock() {
       isEditMode = !isEditMode;
       const btn = document.getElementById('lock-btn');
       if (isEditMode) {
         const pass = prompt("編集パスワードを入力してください (初期: 1234):");
-        if (pass === "1234") {
-          btn.innerText = "🔓 編集中";
-          document.body.classList.add('edit-active');
-        } else {
-          isEditMode = false;
-          alert("パスワードが違います");
-        }
-      } else {
-        btn.innerText = "🔒 編集ロック";
-        document.body.classList.remove('edit-active');
-      }
+        if (pass === "1234") { btn.innerText = "🔓 編集中"; document.body.classList.add('edit-active'); }
+        else { isEditMode = false; alert("パスワードが違います"); }
+      } else { btn.innerText = "🔒 編集ロック"; document.body.classList.remove('edit-active'); }
       applyEditableState();
-      if (activeModalId) {
-        const c = characters.find(x => x.id === activeModalId);
-        if (c) {
-          const songBox = document.getElementById('m-song');
-          songBox.innerText = isEditMode ? (c.song || '') : '';
-          if (!isEditMode) songBox.innerHTML = linkifyText(c.song || '');
-        }
-      }
     }
 
     function applyEditableState() {
       const editables = ['m-name', 'm-ruby', 'm-age', 'm-height', 'm-birth', 'm-first', 'm-second', 'm-color', 'm-personality', 'm-setting', 'm-song'];
-      editables.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.contentEditable = isEditMode;
-      });
-      const colorPicker = document.getElementById('m-color-picker');
-      if (colorPicker) {
-        colorPicker.style.display = isEditMode ? 'inline-block' : 'none';
-      }
+      editables.forEach(id => { const el = document.getElementById(id); if (el) el.contentEditable = isEditMode; });
+      document.getElementById('m-color-picker').style.display = isEditMode ? 'inline-block' : 'none';
     }
 
-    function saveCurrentModalData() {
+    async function saveCurrentModalData() {
       if (!activeModalId || !isEditMode) return;
       const c = characters.find(x => x.id === activeModalId);
       if (!c) return;
-
       c.name = document.getElementById('m-name').innerText;
       c.ruby = document.getElementById('m-ruby').innerText;
       c.age = document.getElementById('m-age').innerText;
@@ -673,25 +509,22 @@
       c.personality = document.getElementById('m-personality').innerText;
       c.setting = document.getElementById('m-setting').innerText;
       c.song = document.getElementById('m-song').innerText;
-
-      const tagStr = document.getElementById('m-tags-input').value;
-      c.tags = tagStr.split(',').map(s => s.trim()).filter(s => s.length > 0);
-
-      saveData();
+      c.tags = document.getElementById('m-tags-input').value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      await saveData();
     }
 
-    function deleteGalleryImg(event, idx) {
+    async function deleteGalleryImg(event, idx) {
       event.stopPropagation();
       if (!activeModalId) return;
       const c = characters.find(x => x.id === activeModalId);
       if (c && c.gallery) {
         c.gallery.splice(idx, 1);
-        saveData();
+        await saveData();
         renderModalGallery(c.gallery);
       }
     }
 
-    function addNewCharacter() {
+    async function addNewCharacter() {
       const newId = Date.now().toString();
       const newChar = {
         id: newId, createdAt: Date.now(), tags: ["MAIN"],
@@ -701,17 +534,16 @@
         icon: "https://via.placeholder.com/150", gallery: []
       };
       characters.push(newChar);
-      saveData();
-      renderTagTabs();
-      renderGrid();
+      await saveData();
+      renderTagTabs(); renderGrid();
       openDetailModal(newId);
     }
 
-    function deleteCurrentCharacter() {
+    async function deleteCurrentCharacter() {
       if (!activeModalId) return;
       if (!confirm("本当にこのキャラクターを削除しますか？")) return;
       characters = characters.filter(x => x.id !== activeModalId);
-      saveData();
+      await saveData();
       closeDetailModal();
     }
   </script>
