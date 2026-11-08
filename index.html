@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>CHARACTER ARCHIVE (CLOUD SYNC)</title>
+  <title>CHARACTER ARCHIVE</title>
   <style>
     :root {
       --bg-color: #0f1115;
@@ -25,11 +25,9 @@
     h1 { font-size: 16px; letter-spacing: 2px; font-weight: 700; }
     .header-btns { display: flex; gap: 10px; align-items: center; }
     .icon-btn { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main); font-size: 13px; cursor: pointer; padding: 6px 12px; border-radius: 6px; font-weight: bold; }
-    .sync-status { font-size: 10px; color: #10b981; margin-left: 6px; font-weight: normal; }
 
     .container { max-width: 600px; margin: 0 auto; padding: 20px 16px; }
     
-    /* タブ切り替え */
     .tabs-bar { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
     .tab-nav-btn { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-sub); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
     .tab-nav-btn.active { background: var(--accent-color); color: white; border-color: var(--accent-color); }
@@ -38,12 +36,10 @@
     .sort-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-sub); }
     .sort-select { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 8px; border-radius: 6px; font-size: 12px; }
 
-    /* タブフィルター */
     .tag-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
     .tag-btn { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-sub); padding: 4px 10px; border-radius: 14px; font-size: 11px; white-space: nowrap; cursor: pointer; }
     .tag-btn.active { background: var(--accent-color); color: white; border-color: var(--accent-color); }
 
-    /* 一覧グリッド */
     .char-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
     .grid-item { cursor: pointer; text-align: center; }
     .icon-wrapper { width: 100%; aspect-ratio: 1 / 1; background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
@@ -52,19 +48,15 @@
     .char-name-label { margin-top: 6px; font-size: 13px; font-weight: 600; color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .char-ruby-label { font-size: 10px; color: var(--text-sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px; }
 
-    /* 各セクション */
     .section-view { display: none; }
     .section-view.active { display: block; }
 
-    /* カード型表示 */
     .content-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
     .section-title { font-size: 11px; letter-spacing: 1px; color: var(--text-sub); margin-bottom: 8px; text-transform: uppercase; font-weight: bold; }
 
-    /* 相関図入力エリア */
     .relation-builder { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
     .relation-row { display: flex; gap: 8px; align-items: center; }
 
-    /* モーダル (詳細ポップアップ) */
     #detail-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1000; justify-content: center; align-items: center; padding: 16px; }
     .modal-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; padding: 20px; position: relative; display: flex; flex-direction: column; gap: 16px; }
     .modal-close { position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.1); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; z-index: 10; }
@@ -75,7 +67,6 @@
     .modal-title-area h2 { font-size: 18px; margin-bottom: 2px; }
     .modal-ruby { font-size: 11px; color: var(--text-sub); margin-bottom: 6px; }
 
-    /* タグバッジ表示 */
     .tag-badge-container { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
     .tag-badge { font-size: 10px; background: rgba(99, 102, 241, 0.2); color: #818cf8; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
 
@@ -84,7 +75,6 @@
     .meta-lbl { color: var(--text-sub); width: 50px; flex-shrink: 0; }
     .meta-val { color: var(--text-main); font-weight: 500; }
 
-    /* カラーピッカーのスタイル */
     .color-picker-wrapper { display: flex; align-items: center; gap: 8px; }
     .color-input { -webkit-appearance: none; border: none; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; background: none; }
     .color-input::-webkit-color-swatch-wrapper { padding: 0; }
@@ -93,14 +83,12 @@
     .text-block-box { background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-break: break-all; }
     .text-block-box a { color: #60a5fa; text-decoration: underline; }
 
-    /* ギャラリー横スクロール */
     .horizontal-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
     .gallery-thumb { width: 90px; height: 90px; flex-shrink: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); background: #111; cursor: pointer; position: relative; }
     .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
     .del-img-btn { position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 10px; display: none; }
     .edit-active .del-img-btn { display: block; }
 
-    /* Twitter風フルスクリーン画像モーダル */
     #image-viewer-modal {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0, 0, 0, 0.95); z-index: 2000;
@@ -120,7 +108,6 @@
       z-index: 2010;
     }
 
-    /* 編集用コントロール */
     .edit-controls { display: none; margin-top: 10px; flex-direction: column; gap: 6px; }
     .edit-active .edit-controls { display: flex; }
     .text-input, .select-input { background: #111; border: 1px solid var(--border-color); color: #fff; padding: 6px 8px; font-size: 12px; border-radius: 6px; width: 100%; }
@@ -136,46 +123,41 @@
 <body>
 
   <header>
-    <h1>OC DATABASE<span class="sync-status" id="sync-status">☁ 接続中</span></h1>
+    <h1>OC DATABASE</h1>
     <div class="header-btns">
       <button class="icon-btn" id="lock-btn" onclick="toggleLock()">🔒 編集ロック</button>
     </div>
   </header>
 
   <main class="container">
-    <!-- タブメニュー -->
     <div class="tabs-bar">
       <button class="tab-nav-btn active" onclick="switchTab('chars')">キャラクター</button>
       <button class="tab-nav-btn" onclick="switchTab('playlist')">イメソンまとめ</button>
       <button class="tab-nav-btn" onclick="switchTab('relations')">相関図</button>
     </div>
 
-    <!-- 1. キャラクター一覧タブ -->
     <section id="chars-section" class="section-view active">
       <div class="controls-bar">
         <div class="sort-row">
           <span>並び替え</span>
           <select class="sort-select" id="sort-select" onchange="renderGrid()">
-            <option value="default">追加順</option>
+            <option value="default">追加順 (デフォルト)</option>
             <option value="name-asc">五十音順</option>
             <option value="height-asc">身長順 (低い順)</option>
             <option value="height-desc">身長順 (高い順)</option>
             <option value="birthday-asc">誕生日順</option>
           </select>
         </div>
-        <!-- 世界線タグタブ -->
         <div class="tag-tabs" id="tag-tabs"></div>
       </div>
       <div class="char-grid" id="char-grid"></div>
       <button class="add-char-btn" onclick="addNewCharacter()">+ キャラクターを追加する</button>
     </section>
 
-    <!-- 2. イメソンまとめタブ -->
     <section id="playlist-section" class="section-view">
       <div id="playlist-container"></div>
     </section>
 
-    <!-- 3. 相関図タブ -->
     <section id="relations-section" class="section-view">
       <div class="relation-builder edit-controls" style="display: flex;">
         <div style="font-size: 12px; font-weight: bold; color: var(--accent-color);">🔗 キャラ同士の関係性を追加・更新</div>
@@ -184,14 +166,13 @@
           <span style="font-size: 12px; color: var(--text-sub);">➔</span>
           <select class="select-input" id="rel-to"></select>
         </div>
-        <input type="text" class="text-input" id="rel-label" placeholder="関係性 (例: 幼馴染、ライバル、苦手など)">
+        <input type="text" class="text-input" id="rel-label" placeholder="関係性 (例: 幼馴染、ライバルなど)">
         <button class="file-btn" onclick="saveRelation()">関係性を保存する</button>
       </div>
       <div id="relations-container"></div>
     </section>
   </main>
 
-  <!-- キャラ詳細ポップアップモーダル -->
   <div id="detail-modal">
     <div class="modal-card" id="modal-card-box">
       <button class="modal-close" onclick="closeDetailModal()">✕</button>
@@ -208,22 +189,18 @@
       </div>
 
       <div class="edit-controls">
-        <label class="file-btn">アイコン画像を変更<input type="file" accept="image/*" style="display:none" onchange="uploadIcon(this)"></label>
-        <input type="text" class="text-input" id="m-icon-url" placeholder="または画像URL" onchange="updateIconUrl(this.value)">
+        <label class="file-btn">📁 アイコン画像を選択<input type="file" accept="image/*" style="display:none" onchange="uploadIcon(this)"></label>
         <input type="text" class="text-input" id="m-tags-input" placeholder="世界線タグをカンマ(,)区切りで入力 (例: MAIN, 学パロ)" onblur="saveCurrentModalData()">
       </div>
 
-      <!-- プロフィール項目 -->
       <div class="profile-details-grid">
         <div class="profile-meta-item"><span class="meta-lbl">年齢:</span><span class="meta-val" id="m-age" contenteditable="false" onblur="saveCurrentModalData()">-</span></div>
         <div class="profile-meta-item"><span class="meta-lbl">身長:</span><span class="meta-val" id="m-height" contenteditable="false" onblur="saveCurrentModalData()">-</span></div>
         <div class="profile-meta-item"><span class="meta-lbl">誕生日:</span><span class="meta-val" id="m-birth" contenteditable="false" onblur="saveCurrentModalData()">-</span></div>
         <div class="profile-meta-item"><span class="meta-lbl">一人称:</span><span class="meta-val" id="m-first" contenteditable="false" onblur="saveCurrentModalData()">-</span></div>
         <div class="profile-meta-item"><span class="meta-lbl">二人称:</span><span class="meta-val" id="m-second" contenteditable="false" onblur="saveCurrentModalData()">-</span></div>
-        
-        <!-- イメカラ -->
         <div class="profile-meta-item">
-          <span class="meta-lbl">イメージカラー:</span>
+          <span class="meta-lbl">イメカラ:</span>
           <div class="color-picker-wrapper">
             <span class="meta-val" id="m-color" contenteditable="false" onblur="saveCurrentModalData()">-</span>
             <input type="color" class="color-input edit-controls" id="m-color-picker" onchange="onColorPickerChange(this.value)" style="display:none;">
@@ -231,30 +208,26 @@
         </div>
       </div>
 
-      <!-- ギャラリー -->
       <div>
-        <div class="section-title">GALLERY (イラスト・画像)</div>
+        <div class="section-title">GALLERY (イラスト)</div>
         <div class="horizontal-scroll" id="m-gallery"></div>
         <div class="edit-controls">
-          <label class="file-btn">+ ギャラリー画像を追加<input type="file" accept="image/*" multiple style="display:none" onchange="uploadGallery(this)"></label>
+          <label class="file-btn">📁 イラストを追加する (複数選択可)<input type="file" accept="image/*" multiple style="display:none" onchange="uploadGallery(this)"></label>
         </div>
       </div>
 
-      <!-- 性格 -->
       <div>
         <div class="section-title">性格</div>
         <div class="text-block-box" id="m-personality" contenteditable="false" onblur="saveCurrentModalData()"></div>
       </div>
 
-      <!-- 設定 -->
       <div>
         <div class="section-title">設定・背景</div>
         <div class="text-block-box" id="m-setting" contenteditable="false" onblur="saveCurrentModalData()"></div>
       </div>
 
-      <!-- イメソン (リンク自動変換対応) -->
       <div>
-        <div class="section-title">イメソン (URL入力で自動リンク化)</div>
+        <div class="section-title">イメソン</div>
         <div class="text-block-box" id="m-song" contenteditable="false" onblur="saveCurrentModalData()"></div>
       </div>
 
@@ -262,17 +235,12 @@
     </div>
   </div>
 
-  <!-- Twitter風 フルスクリーン画像ビューア -->
   <div id="image-viewer-modal">
     <button class="viewer-close-btn" onclick="closeImageViewer()">✕</button>
     <img id="image-viewer-img" src="" alt="">
   </div>
 
   <script>
-    // ★★★ ご自身の JSONBin 情報に書き換えてください ★★★
-    const JSONBIN_BIN_ID = "6aed9ed3ac6210605a71bd33";
-    const JSONBIN_API_KEY = "$2a$10$1eWgkJHizXiQFkFZvNQ6e.VvMi2ten4wEDnBdsdgX7.3Xbn3Jar2u";
-
     let characters = [];
     let relations = [];
     let isEditMode = false;
@@ -289,43 +257,16 @@
       }
     ];
 
-    async function loadData() {
-      const statusEl = document.getElementById('sync-status');
-      statusEl.innerText = "☁ 同期中...";
-      try {
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-          headers: { "X-Master-Key": JSONBIN_API_KEY }
-        });
-        if (!res.ok) throw new Error("Fetch error");
-        const json = await res.json();
-        characters = (json.record && json.record.characters) ? json.record.characters : defaultData;
-        relations = (json.record && json.record.relations) ? json.record.relations : [];
-        statusEl.innerText = "☁ 同期完了";
-      } catch (e) {
-        statusEl.innerText = "⚠️ オフライン";
-        characters = JSON.parse(localStorage.getItem('oc_chars')) || defaultData;
-        relations = JSON.parse(localStorage.getItem('oc_rels')) || [];
-      }
+    function loadData() {
+      characters = JSON.parse(localStorage.getItem('oc_chars')) || defaultData;
+      relations = JSON.parse(localStorage.getItem('oc_rels')) || [];
       renderTagTabs();
       renderGrid();
     }
 
-    async function saveData() {
-      const statusEl = document.getElementById('sync-status');
-      statusEl.innerText = "☁ 保存中...";
+    function saveData() {
       localStorage.setItem('oc_chars', JSON.stringify(characters));
       localStorage.setItem('oc_rels', JSON.stringify(relations));
-      try {
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json", "X-Master-Key": JSONBIN_API_KEY },
-          body: JSON.stringify({ characters, relations })
-        });
-        if (!res.ok) throw new Error("Save error");
-        statusEl.innerText = "☁ 同期完了";
-      } catch (e) {
-        statusEl.innerText = "⚠️ 保存失敗";
-      }
     }
 
     loadData();
@@ -406,7 +347,6 @@
       });
     }
 
-    // URLを自動検知して<a>タグに変換するヘルパー
     function linkifyText(text) {
       if (!text) return '';
       const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -492,7 +432,6 @@
       if (!c) return;
 
       document.getElementById('m-icon').src = c.icon || '';
-      document.getElementById('m-icon-url').value = (c.icon || '').startsWith('data:') ? '' : c.icon;
       document.getElementById('m-name').innerText = c.name || '';
       document.getElementById('m-ruby').innerText = c.ruby || 'よみがな';
       document.getElementById('m-age').innerText = c.age || '-';
@@ -507,7 +446,6 @@
       document.getElementById('m-personality').innerText = c.personality || '';
       document.getElementById('m-setting').innerText = c.setting || '';
       
-      // 閲覧時はリンク化、編集中は生テキストを表示するため切り替え
       const songBox = document.getElementById('m-song');
       if (isEditMode) {
         songBox.innerText = c.song || '';
@@ -559,7 +497,6 @@
       }
     }
 
-    // Twitter風フルスクリーン画像モーダル
     const viewerModal = document.getElementById('image-viewer-modal');
     const viewerImg = document.getElementById('image-viewer-img');
     let startY = 0;
@@ -608,7 +545,7 @@
       isEditMode = !isEditMode;
       const btn = document.getElementById('lock-btn');
       if (isEditMode) {
-        const pass = prompt("編集パスワードを入力してください:");
+        const pass = prompt("編集パスワードを入力してください (初期: 1234):");
         if (pass === "1234") {
           btn.innerText = "🔓 編集中";
           document.body.classList.add('edit-active');
@@ -621,7 +558,6 @@
         document.body.classList.remove('edit-active');
       }
       applyEditableState();
-      // ロック切替時にイメソンの表示（生テキスト ⇔ リンク）を更新
       if (activeModalId) {
         const c = characters.find(x => x.id === activeModalId);
         if (c) {
@@ -667,35 +603,42 @@
       saveData();
     }
 
-    async function uploadIcon(input) {
+    function uploadIcon(input) {
       if (input.files && input.files[0]) {
-        const compressed = await compressImageFile(input.files[0]);
-        updateIconUrl(compressed);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (!activeModalId) return;
+          const c = characters.find(x => x.id === activeModalId);
+          if (c) {
+            c.icon = e.target.result;
+            document.getElementById('m-icon').src = c.icon;
+            saveData();
+          }
+        };
+        reader.readAsDataURL(input.files[0]);
       }
     }
 
-    function updateIconUrl(url) {
-      if (!activeModalId) return;
-      const c = characters.find(x => x.id === activeModalId);
-      if (c && url) {
-        c.icon = url;
-        document.getElementById('m-icon').src = url;
-        saveData();
-      }
-    }
-
-    async function uploadGallery(input) {
+    function uploadGallery(input) {
       if (!activeModalId || !input.files.length) return;
       const c = characters.find(x => x.id === activeModalId);
       if (!c) return;
       if (!c.gallery) c.gallery = [];
 
+      let loaded = 0;
       for (let i = 0; i < input.files.length; i++) {
-        const compressed = await compressImageFile(input.files[i]);
-        c.gallery.push(compressed);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          c.gallery.push(e.target.result);
+          loaded++;
+          if (loaded === input.files.length) {
+            input.value = '';
+            renderModalGallery(c.gallery);
+            saveData();
+          }
+        };
+        reader.readAsDataURL(input.files[i]);
       }
-      saveData();
-      renderModalGallery(c.gallery);
     }
 
     function deleteGalleryImg(event, idx) {
@@ -707,35 +650,6 @@
         saveData();
         renderModalGallery(c.gallery);
       }
-    }
-
-    function compressImageFile(file) {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = (e) => {
-          const img = new Image();
-          img.src = e.target.result;
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const maxDim = 400;
-            let width = img.width;
-            let height = img.height;
-            if (width > height && width > maxDim) {
-              height *= maxDim / width;
-              width = maxDim;
-            } else if (height > maxDim) {
-              width *= maxDim / height;
-              height = maxDim;
-            }
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.7));
-          };
-        };
-      });
     }
 
     function addNewCharacter() {
