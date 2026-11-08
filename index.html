@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <script>
-    // 🔑 ここにさっきメモした2つを貼り付けてね！
-    const CLOUDINARY_CLOUD_NAME = "bfknxvcobfknxvco";
-    const CLOUDINARY_UPLOAD_PRESET = "OC-site";
-  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>CHARACTER ARCHIVE</title>
+  <script>
+    // 🔑 ここにあなたのCloud NameとPreset名をいれてね！
+    const CLOUDINARY_CLOUD_NAME = "bfknxvcobfknxvco";
+    const CLOUDINARY_UPLOAD_PRESET = "OC-site";
+  </script>
   <style>
     :root {
       --bg-color: #0f1115;
@@ -379,74 +379,4 @@
 
     function extractNum(str) {
       const m = (str || '').match(/(\d+)/);
-      return m ? parseInt(m[1], 10) : 9999;
-    }
-
-    function renderGrid() {
-      const grid = document.getElementById('char-grid');
-      grid.innerHTML = '';
-      const sortMode = document.getElementById('sort-select').value;
-
-      let list = activeTagFilter === 'ALL' ? [...characters] : characters.filter(c => (c.tags || []).includes(activeTagFilter));
-
-      if (sortMode === 'name-asc') {
-        list.sort((a, b) => (a.ruby || a.name || '').localeCompare(b.ruby || b.name || '', 'ja'));
-      } else if (sortMode === 'height-asc') {
-        list.sort((a, b) => extractNum(a.height) - extractNum(b.height));
-      } else if (sortMode === 'height-desc') {
-        list.sort((a, b) => extractNum(b.height) - extractNum(a.height));
-      } else if (sortMode === 'birthday-asc') {
-        list.sort((a, b) => (a.birth || '').localeCompare(b.birth || ''));
-      } else {
-        list.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-      }
-
-      list.forEach(c => {
-        const item = document.createElement('div');
-        item.className = 'grid-item';
-        item.onclick = () => openDetailModal(c.id);
-        item.innerHTML = `
-          <div class="icon-wrapper"><img src="${c.icon || 'https://via.placeholder.com/150'}"></div>
-          <div class="char-name-label">${c.name}</div>
-          <div class="char-ruby-label">${c.ruby || ''}</div>
-        `;
-        grid.appendChild(item);
-      });
-    }
-
-    function linkifyText(text) {
-      if (!text) return '';
-      const urlRegex = /(https?:\/\/[^\s]+)/g;
-      return text.replace(urlRegex, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">▶ 試聴する（YouTube等）</a>`);
-    }
-
-    function renderPlaylist() {
-      const box = document.getElementById('playlist-container');
-      box.innerHTML = '';
-      characters.forEach(c => {
-        if (c.song) {
-          const card = document.createElement('div');
-          card.className = 'content-card';
-          card.innerHTML = `<div style="font-weight:bold; font-size:14px; margin-bottom:6px; color:var(--accent-color);">${c.name}</div><div style="color:var(--text-main); font-size:13px; line-height:1.5;">🎵 ${linkifyText(c.song)}</div>`;
-          box.appendChild(card);
-        }
-      });
-      if (box.innerHTML === '') box.innerHTML = `<div style="text-align:center; color:var(--text-sub); margin-top:30px; font-size:13px;">登録されているイメソンはありません</div>`;
-    }
-
-    function populateRelationSelects() {
-      const fromSel = document.getElementById('rel-from');
-      const toSel = document.getElementById('rel-to');
-      fromSel.innerHTML = ''; toSel.innerHTML = '';
-      characters.forEach(c => {
-        fromSel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
-        toSel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
-      });
-    }
-
-    function saveRelation() {
-      const from = document.getElementById('rel-from').value;
-      const to = document.getElementById('rel-to').value;
-      const label = document.getElementById('rel-label').value.trim();
-
-      if (from === to) return alert("違う
+      return m ? parseInt(m[1], 10) : 999
