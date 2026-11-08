@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+  <script>
+    // 🔑 ここにさっきメモした2つを貼り付けてね！
+    const CLOUDINARY_CLOUD_NAME = "ここにCloud Nameを入れる";
+    const CLOUDINARY_UPLOAD_PRESET = "ここにUpload Preset名を入れる";
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>CHARACTER ARCHIVE</title>
@@ -118,6 +123,7 @@
     .edit-active .add-char-btn { display: block; }
     .del-btn { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 6px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: bold; width: 100%; text-align: center; margin-top: 8px; display: none; }
     .edit-active .del-btn { display: block; }
+    .loading-text { font-size: 11px; color: var(--accent-color); font-weight: bold; display: none; margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -189,7 +195,8 @@
       </div>
 
       <div class="edit-controls">
-        <label class="file-btn">📁 アイコン画像を選択<input type="file" accept="image/*" style="display:none" onchange="uploadIcon(this)"></label>
+        <label class="file-btn">📁 アイコン画像を選択<input type="file" accept="image/*" style="display:none" onchange="uploadIconToCloudinary(this)"></label>
+        <div id="icon-upload-status" class="loading-text">☁️ 画像をアップロード中...</div>
         <input type="text" class="text-input" id="m-tags-input" placeholder="世界線タグをカンマ(,)区切りで入力 (例: MAIN, 学パロ)" onblur="saveCurrentModalData()">
       </div>
 
@@ -212,7 +219,8 @@
         <div class="section-title">GALLERY (イラスト)</div>
         <div class="horizontal-scroll" id="m-gallery"></div>
         <div class="edit-controls">
-          <label class="file-btn">📁 イラストを追加する (複数選択可)<input type="file" accept="image/*" multiple style="display:none" onchange="uploadGallery(this)"></label>
+          <label class="file-btn">📁 イラストを追加する (複数選択可)<input type="file" accept="image/*" multiple style="display:none" onchange="uploadGalleryToCloudinary(this)"></label>
+          <div id="gallery-upload-status" class="loading-text">☁️ イラストをアップロード中...</div>
         </div>
       </div>
 
@@ -270,6 +278,65 @@
     }
 
     loadData();
+
+    async function sendFileToCloudinary(file) {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      return data.secure_url;
+    }
+
+    async function uploadIconToCloudinary(input) {
+      if (input.files && input.files[0]) {
+        const statusEl = document.getElementById('icon-upload-status');
+        statusEl.style.display = 'block';
+        try {
+          const url = await sendFileToCloudinary(input.files[0]);
+          if (activeModalId) {
+            const c = characters.find(x => x.id === activeModalId);
+            if (c) {
+              c.icon = url;
+              document.getElementById('m-icon').src = url;
+              saveData();
+            }
+          }
+        } catch (e) {
+          alert('画像のアップロードに失敗しました');
+        } finally {
+          statusEl.style.display = 'none';
+        }
+      }
+    }
+
+    async function uploadGalleryToCloudinary(input) {
+      if (!activeModalId || !input.files.length) return;
+      const c = characters.find(x => x.id === activeModalId);
+      if (!c) return;
+      if (!c.gallery) c.gallery = [];
+
+      const statusEl = document.getElementById('gallery-upload-status');
+      statusEl.style.display = 'block';
+
+      try {
+        for (let i = 0; i < input.files.length; i++) {
+          const url = await sendFileToCloudinary(input.files[i]);
+          c.gallery.push(url);
+        }
+        input.value = '';
+        renderModalGallery(c.gallery);
+        saveData();
+      } catch (e) {
+        alert('一部のイラストのアップロードに失敗しました');
+      } finally {
+        statusEl.style.display = 'none';
+      }
+    }
 
     function switchTab(tabName) {
       document.querySelectorAll('.tab-nav-btn').forEach(b => b.classList.remove('active'));
@@ -382,299 +449,4 @@
       const to = document.getElementById('rel-to').value;
       const label = document.getElementById('rel-label').value.trim();
 
-      if (from === to) return alert("違うキャラクターを選んでください");
-      if (!label) return alert("関係性を入力してください");
-
-      const existing = relations.find(r => r.from === from && r.to === to);
-      if (existing) existing.label = label;
-      else relations.push({ from, to, label });
-
-      saveData();
-      document.getElementById('rel-label').value = '';
-      renderRelations();
-    }
-
-    function renderRelations() {
-      const box = document.getElementById('relations-container');
-      box.innerHTML = '';
-
-      relations.forEach((r, idx) => {
-        const fromChar = characters.find(c => c.id === r.from);
-        const toChar = characters.find(c => c.id === r.to);
-        if (!fromChar || !toChar) return;
-
-        const card = document.createElement('div');
-        card.className = 'content-card';
-        card.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="font-size:13px; font-weight:bold;">
-              <span style="color:var(--accent-color);">${fromChar.name}</span> ➔ <span style="color:var(--accent-color);">${toChar.name}</span>
-            </div>
-            ${isEditMode ? `<button onclick="deleteRelation(${idx})" style="background:none; border:none; color:#ef4444; font-size:11px; cursor:pointer;">削除</button>` : ''}
-          </div>
-          <div style="margin-top:6px; color:var(--text-main); font-size:13px; background:rgba(0,0,0,0.2); padding:8px; border-radius:6px;">${r.label}</div>
-        `;
-        box.appendChild(card);
-      });
-
-      if (box.innerHTML === '') box.innerHTML = `<div style="text-align:center; color:var(--text-sub); margin-top:30px; font-size:13px;">登録されている関係性はありません</div>`;
-    }
-
-    function deleteRelation(idx) {
-      relations.splice(idx, 1);
-      saveData();
-      renderRelations();
-    }
-
-    function openDetailModal(id) {
-      activeModalId = id;
-      const c = characters.find(x => x.id === id);
-      if (!c) return;
-
-      document.getElementById('m-icon').src = c.icon || '';
-      document.getElementById('m-name').innerText = c.name || '';
-      document.getElementById('m-ruby').innerText = c.ruby || 'よみがな';
-      document.getElementById('m-age').innerText = c.age || '-';
-      document.getElementById('m-height').innerText = c.height || '-';
-      document.getElementById('m-birth').innerText = c.birth || '-';
-      document.getElementById('m-first').innerText = c.firstPerson || '-';
-      document.getElementById('m-second').innerText = c.secondPerson || '-';
-      document.getElementById('m-color').innerText = c.color || '-';
-      if (c.color && c.color.startsWith('#')) {
-        document.getElementById('m-color-picker').value = c.color;
-      }
-      document.getElementById('m-personality').innerText = c.personality || '';
-      document.getElementById('m-setting').innerText = c.setting || '';
-      
-      const songBox = document.getElementById('m-song');
-      if (isEditMode) {
-        songBox.innerText = c.song || '';
-      } else {
-        songBox.innerHTML = linkifyText(c.song || '');
-      }
-
-      const tagContainer = document.getElementById('m-tags-container');
-      tagContainer.innerHTML = '';
-      (c.tags || []).forEach(t => {
-        const b = document.createElement('span');
-        b.className = 'tag-badge';
-        b.innerText = `#${t}`;
-        tagContainer.appendChild(b);
-      });
-      document.getElementById('m-tags-input').value = (c.tags || []).join(', ');
-
-      renderModalGallery(c.gallery || []);
-      document.getElementById('detail-modal').style.display = 'flex';
-      applyEditableState();
-    }
-
-    function onColorPickerChange(hexValue) {
-      document.getElementById('m-color').innerText = hexValue;
-      saveCurrentModalData();
-    }
-
-    function closeDetailModal() {
-      document.getElementById('detail-modal').style.display = 'none';
-      activeModalId = null;
-      renderTagTabs();
-      renderGrid();
-    }
-
-    function renderModalGallery(galleryList) {
-      const gBox = document.getElementById('m-gallery');
-      gBox.innerHTML = '';
-      galleryList.forEach((url, idx) => {
-        const thumb = document.createElement('div');
-        thumb.className = 'gallery-thumb';
-        thumb.innerHTML = `
-          <img src="${url}" onclick="openImageViewer('${url}')">
-          <button class="del-img-btn" onclick="deleteGalleryImg(event, ${idx})">✕</button>
-        `;
-        gBox.appendChild(thumb);
-      });
-      if (galleryList.length === 0) {
-        gBox.innerHTML = `<div style="font-size:12px; color:var(--text-sub); padding:10px 0;">画像なし</div>`;
-      }
-    }
-
-    const viewerModal = document.getElementById('image-viewer-modal');
-    const viewerImg = document.getElementById('image-viewer-img');
-    let startY = 0;
-    let currentY = 0;
-    let isDragging = false;
-
-    function openImageViewer(url) {
-      viewerImg.src = url;
-      viewerImg.style.transform = 'translateY(0px)';
-      viewerImg.style.opacity = '1';
-      viewerModal.style.display = 'flex';
-    }
-
-    function closeImageViewer() {
-      viewerModal.style.display = 'none';
-    }
-
-    viewerModal.addEventListener('touchstart', (e) => {
-      startY = e.touches[0].clientY;
-      isDragging = true;
-      viewerImg.style.transition = 'none';
-    });
-
-    viewerModal.addEventListener('touchmove', (e) => {
-      if (!isDragging) return;
-      currentY = e.touches[0].clientY - startY;
-      if (currentY > 0) {
-        viewerImg.style.transform = `translateY(${currentY}px)`;
-        viewerImg.style.opacity = `${1 - currentY / 300}`;
-      }
-    });
-
-    viewerModal.addEventListener('touchend', () => {
-      if (!isDragging) return;
-      isDragging = false;
-      viewerImg.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';
-      if (currentY > 100) {
-        closeImageViewer();
-      } else {
-        viewerImg.style.transform = 'translateY(0px)';
-        viewerImg.style.opacity = '1';
-      }
-    });
-
-    function toggleLock() {
-      isEditMode = !isEditMode;
-      const btn = document.getElementById('lock-btn');
-      if (isEditMode) {
-        const pass = prompt("編集パスワードを入力してください (初期: 1234):");
-        if (pass === "1234") {
-          btn.innerText = "🔓 編集中";
-          document.body.classList.add('edit-active');
-        } else {
-          isEditMode = false;
-          alert("パスワードが違います");
-        }
-      } else {
-        btn.innerText = "🔒 編集ロック";
-        document.body.classList.remove('edit-active');
-      }
-      applyEditableState();
-      if (activeModalId) {
-        const c = characters.find(x => x.id === activeModalId);
-        if (c) {
-          const songBox = document.getElementById('m-song');
-          songBox.innerText = isEditMode ? (c.song || '') : '';
-          if (!isEditMode) songBox.innerHTML = linkifyText(c.song || '');
-        }
-      }
-    }
-
-    function applyEditableState() {
-      const editables = ['m-name', 'm-ruby', 'm-age', 'm-height', 'm-birth', 'm-first', 'm-second', 'm-color', 'm-personality', 'm-setting', 'm-song'];
-      editables.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.contentEditable = isEditMode;
-      });
-      const colorPicker = document.getElementById('m-color-picker');
-      if (colorPicker) {
-        colorPicker.style.display = isEditMode ? 'inline-block' : 'none';
-      }
-    }
-
-    function saveCurrentModalData() {
-      if (!activeModalId || !isEditMode) return;
-      const c = characters.find(x => x.id === activeModalId);
-      if (!c) return;
-
-      c.name = document.getElementById('m-name').innerText;
-      c.ruby = document.getElementById('m-ruby').innerText;
-      c.age = document.getElementById('m-age').innerText;
-      c.height = document.getElementById('m-height').innerText;
-      c.birth = document.getElementById('m-birth').innerText;
-      c.firstPerson = document.getElementById('m-first').innerText;
-      c.secondPerson = document.getElementById('m-second').innerText;
-      c.color = document.getElementById('m-color').innerText;
-      c.personality = document.getElementById('m-personality').innerText;
-      c.setting = document.getElementById('m-setting').innerText;
-      c.song = document.getElementById('m-song').innerText;
-
-      const tagStr = document.getElementById('m-tags-input').value;
-      c.tags = tagStr.split(',').map(s => s.trim()).filter(s => s.length > 0);
-
-      saveData();
-    }
-
-    function uploadIcon(input) {
-      if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if (!activeModalId) return;
-          const c = characters.find(x => x.id === activeModalId);
-          if (c) {
-            c.icon = e.target.result;
-            document.getElementById('m-icon').src = c.icon;
-            saveData();
-          }
-        };
-        reader.readAsDataURL(input.files[0]);
-      }
-    }
-
-    function uploadGallery(input) {
-      if (!activeModalId || !input.files.length) return;
-      const c = characters.find(x => x.id === activeModalId);
-      if (!c) return;
-      if (!c.gallery) c.gallery = [];
-
-      let loaded = 0;
-      for (let i = 0; i < input.files.length; i++) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          c.gallery.push(e.target.result);
-          loaded++;
-          if (loaded === input.files.length) {
-            input.value = '';
-            renderModalGallery(c.gallery);
-            saveData();
-          }
-        };
-        reader.readAsDataURL(input.files[i]);
-      }
-    }
-
-    function deleteGalleryImg(event, idx) {
-      event.stopPropagation();
-      if (!activeModalId) return;
-      const c = characters.find(x => x.id === activeModalId);
-      if (c && c.gallery) {
-        c.gallery.splice(idx, 1);
-        saveData();
-        renderModalGallery(c.gallery);
-      }
-    }
-
-    function addNewCharacter() {
-      const newId = Date.now().toString();
-      const newChar = {
-        id: newId, createdAt: Date.now(), tags: ["MAIN"],
-        name: "新規キャラ", ruby: "しんき きゃら", age: "16歳", height: "160cm", birth: "1月1日",
-        firstPerson: "私", secondPerson: "あなた", color: "#6366f1",
-        personality: "", setting: "", song: "",
-        icon: "https://via.placeholder.com/150", gallery: []
-      };
-      characters.push(newChar);
-      saveData();
-      renderTagTabs();
-      renderGrid();
-      openDetailModal(newId);
-    }
-
-    function deleteCurrentCharacter() {
-      if (!activeModalId) return;
-      if (!confirm("本当にこのキャラクターを削除しますか？")) return;
-      characters = characters.filter(x => x.id !== activeModalId);
-      saveData();
-      closeDetailModal();
-    }
-  </script>
-</body>
-</html>
+      if (from === to) return alert("違う
