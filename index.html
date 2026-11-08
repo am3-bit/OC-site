@@ -6,7 +6,7 @@
   <title>CHARACTER ARCHIVE</title>
   <script>
     // 🔑 ここにあなたのCloud NameとPreset名をいれてね！
-    const CLOUDINARY_CLOUD_NAME = "bfknxvcobfknxvco";
+    const CLOUDINARY_CLOUD_NAME = "bfknxvco";
     const CLOUDINARY_UPLOAD_PRESET = "oc-site";
   </script>
   <style>
@@ -289,6 +289,11 @@
         body: formData
       });
       const data = await res.json();
+      if (!res.ok) {
+        console.error('Cloudinary Error:', data);
+        alert(`アップロードエラー: ${data.error ? data.error.message : '認証失敗'}`);
+        throw new Error(data.error ? data.error.message : 'Upload failed');
+      }
       return data.secure_url;
     }
 
@@ -307,7 +312,7 @@
             }
           }
         } catch (e) {
-          alert('画像のアップロードに失敗しました');
+          console.error(e);
         } finally {
           statusEl.style.display = 'none';
         }
@@ -332,7 +337,7 @@
         renderModalGallery(c.gallery);
         saveData();
       } catch (e) {
-        alert('一部のイラストのアップロードに失敗しました');
+        console.error(e);
       } finally {
         statusEl.style.display = 'none';
       }
