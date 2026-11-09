@@ -28,9 +28,16 @@
       margin: 0 auto;
     }
 
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
     h1, h2 {
-      text-align: center;
       color: var(--accent-color);
+      margin: 0;
     }
 
     .section {
@@ -39,6 +46,14 @@
       border-radius: var(--border-radius);
       box-shadow: 0 4px 15px rgba(0,0,0,0.05);
       margin-bottom: 25px;
+    }
+
+    /* 編集モードでのみ表示するエリア */
+    .edit-only {
+      display: none;
+    }
+    body.editing .edit-only {
+      display: block;
     }
 
     /* フォーム周り */
@@ -74,6 +89,12 @@
       background: var(--danger-color);
       padding: 5px 10px;
       font-size: 0.8em;
+    }
+    .btn-mode {
+      background: #b2bec3;
+    }
+    body.editing .btn-mode {
+      background: #e17055;
     }
 
     /* キャラ一覧グリッド */
@@ -134,7 +155,7 @@
       border-left: 4px solid var(--accent-color);
     }
 
-    /* モーダル（キャラ詳細閲覧） */
+    /* モーダル */
     .modal {
       display: none;
       position: fixed;
@@ -166,10 +187,13 @@
 <body>
 
 <div class="container">
-  <h1>🎨 うちの子図鑑 & 相関図</h1>
+  <header>
+    <h1>🎨 うちの子図鑑 & 相関図</h1>
+    <button class="btn-mode" id="mode-toggle-btn" onclick="toggleEditMode()">🔒 閲覧モード (編集する)</button>
+  </header>
 
-  <!-- 1. 新規キャラ登録 -->
-  <div class="section">
+  <!-- 1. 新規キャラ登録（編集モード時のみ表示） -->
+  <div class="section edit-only">
     <h2>➕ キャラクター作成</h2>
     <form id="char-form">
       <div class="form-group">
@@ -198,8 +222,8 @@
     <div class="character-grid" id="character-list"></div>
   </div>
 
-  <!-- 3. 相関図追加 -->
-  <div class="section">
+  <!-- 3. 相関図追加（編集モード時のみ表示） -->
+  <div class="section edit-only">
     <h2>🔗 関係性の追加</h2>
     <form id="relation-form">
       <div style="display: flex; gap: 10px; flex-wrap: wrap;">
@@ -239,204 +263,4 @@
     relations: []
   };
 
-  // 初期読み込み
-  window.onload = async () => {
-    await loadData();
-  };
-
-  // クラウドからデータ取得
-  async function loadData() {
-    const { data, error } = await supabaseClient
-      .from('characters')
-      .select('*')
-      .eq('id', 'main_db')
-      .single();
-
-    if (data && data.data) {
-      appData = data.data;
-      if (!appData.relations) appData.relations = [];
-    }
-    render();
-  }
-
-  // クラウドへデータ保存
-  async function saveData() {
-    const { error } = await supabaseClient
-      .from('characters')
-      .upsert({ id: 'main_db', data: appData });
-
-    if (error) {
-      alert("保存に失敗しました: " + error.message);
-    } else {
-      render();
-    }
-  }
-
-  // 画面描画
-  function render() {
-    renderCharacters();
-    renderRelationForm();
-    renderRelations();
-  }
-
-  // キャラカード表示
-  function renderCharacters() {
-    const list = document.getElementById('character-list');
-    list.innerHTML = '';
-
-    appData.characters.forEach((char, index) => {
-      const card = document.createElement('div');
-      card.className = 'character-card';
-
-      // カラー表示用要素
-      const colorHtml = char.color ? `
-        <div class="color-badge">
-          <span class="color-dot" style="background-color: ${char.color};"></span>
-          <span>${char.color}</span>
-        </div>
-      ` : '';
-
-      card.innerHTML = `
-        <img src="${char.image || 'https://via.placeholder.com/120'}" class="character-img">
-        <h3>${char.name}</h3>
-        ${colorHtml}
-        <button style="margin-top: 10px; width: 100%;" onclick="openModal(${index})">詳細を見る</button>
-        <button class="btn-danger" style="margin-top: 5px; width: 100%;" onclick="deleteCharacter(${index})">削除</button>
-      `;
-      list.appendChild(card);
-    });
-  }
-
-  // 相関関係のプルダウン更新
-  function renderRelationForm() {
-    const fromSelect = document.getElementById('rel-from');
-    const toSelect = document.getElementById('rel-to');
-
-    const options = appData.characters.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-    fromSelect.innerHTML = options;
-    toSelect.innerHTML = options;
-  }
-
-  // 全体の相関関係表示
-  function renderRelations() {
-    const list = document.getElementById('relation-list');
-    list.innerHTML = '';
-
-    if (appData.relations.length === 0) {
-      list.innerHTML = '<p style="text-align: center; color: #888;">関係性はまだ設定されていません。</p>';
-      return;
-    }
-
-    appData.relations.forEach((rel, index) => {
-      const item = document.createElement('div');
-      item.className = 'relation-item';
-      item.innerHTML = `
-        <div>
-          <strong>${rel.from}</strong> ➡️ <span style="color: var(--accent-color); font-weight: bold;">[ ${rel.label} ]</span> ➡️ <strong>${rel.to}</strong>
-        </div>
-        <button class="btn-danger" onclick="deleteRelation(${index})">削除</button>
-      `;
-      list.appendChild(item);
-    });
-  }
-
-  // キャラ作成イベント
-  document.getElementById('char-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('char-name').value;
-    const color = document.getElementById('char-color').value;
-    const memo = document.getElementById('char-memo').value;
-    const file = document.getElementById('char-file').files[0];
-
-    let imageUrl = '';
-    if (file) {
-      const fileName = `${Date.now()}_${file.name}`;
-      const { data, error } = await supabaseClient.storage.from('oc-images').upload(fileName, file);
-      if (data) {
-        const { data: urlData } = supabaseClient.storage.from('oc-images').getPublicUrl(fileName);
-        imageUrl = urlData.publicUrl;
-      }
-    }
-
-    appData.characters.push({ name, color, memo, image: imageUrl });
-    document.getElementById('char-form').reset();
-    await saveData();
-  });
-
-  // 関係性追加イベント
-  document.getElementById('relation-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const from = document.getElementById('rel-from').value;
-    const to = document.getElementById('rel-to').value;
-    const label = document.getElementById('rel-label').value;
-
-    appData.relations.push({ from, to, label });
-    document.getElementById('rel-label').value = '';
-    await saveData();
-  });
-
-  // 相関関係の削除
-  async function deleteRelation(index) {
-    if (confirm('この関係性を削除してもよろしいですか？')) {
-      appData.relations.splice(index, 1);
-      await saveData();
-    }
-  }
-
-  // キャラクター削除
-  async function deleteCharacter(index) {
-    const charName = appData.characters[index].name;
-    if (confirm(`${charName} を削除しますか？ (関連する相関図も削除されます)`)) {
-      // キャラ削除
-      appData.characters.splice(index, 1);
-      // 関連する相関関係も一緒に消す
-      appData.relations = appData.relations.filter(r => r.from !== charName && r.to !== charName);
-      await saveData();
-    }
-  }
-
-  // 個別閲覧モーダル開く
-  function openModal(index) {
-    const char = appData.characters[index];
-    const modal = document.getElementById('char-modal');
-    const modalBody = document.getElementById('modal-body');
-
-    // このキャラが関わる相関一覧を抽出
-    const myRelations = appData.relations.filter(r => r.from === char.name || r.to === char.name);
-
-    let relHtml = myRelations.length > 0 ? myRelations.map(r => `
-      <li style="margin-bottom: 5px;">
-        ${r.from === char.name ? `➡️ <strong>${r.to}</strong> へ: [ ${r.label} ]` : `⬅️ <strong>${r.from}</strong> から: [ ${r.label} ]`}
-      </li>
-    `).join('') : '<li>関係性の登録はありません。</li>';
-
-    const colorHtml = char.color ? `
-      <div class="color-badge" style="margin-bottom: 10px;">
-        <span class="color-dot" style="background-color: ${char.color};"></span>
-        <span>${char.color}</span>
-      </div>
-    ` : '';
-
-    modalBody.innerHTML = `
-      <div style="text-align: center;">
-        <img src="${char.image || 'https://via.placeholder.com/120'}" style="width: 140px; height: 140px; border-radius: 50%; object-fit: cover;">
-        <h2>${char.name}</h2>
-        ${colorHtml}
-      </div>
-      <hr style="margin: 15px 0; border: none; border-top: 1px solid #eee;">
-      <h4>📝 プロフィール</h4>
-      <p style="white-space: pre-wrap; background: #f9f9f9; padding: 10px; border-radius: 8px;">${char.memo || 'メモなし'}</p>
-      <h4>🔗 ${char.name} の相関関係</h4>
-      <ul>${relHtml}</ul>
-    `;
-
-    modal.style.display = 'flex';
-  }
-
-  function closeModal() {
-    document.getElementById('char-modal').style.display = 'none';
-  }
-</script>
-
-</body>
-</html>
+  let isEditing = false;
