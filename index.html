@@ -96,7 +96,6 @@
     .modal-relation-list { list-style: none; padding: 0; margin: 0; font-size: 12px; }
     .modal-relation-list li { background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); padding: 8px 10px; border-radius: 6px; margin-bottom: 6px; }
 
-    /* イメソンリストスタイル */
     .song-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); padding: 8px 10px; border-radius: 6px; margin-bottom: 6px; font-size: 12px; }
     .song-title { font-weight: bold; color: var(--text-main); }
     .song-link { color: var(--accent-color); text-decoration: none; font-size: 11px; }
@@ -138,13 +137,11 @@
 
     <section id="playlist-section" class="section-view"><div id="playlist-container"></div></section>
     
-    <!-- 相関図セクション -->
     <section id="relations-section" class="section-view">
       <div class="relation-builder edit-controls">
         <div style="font-size: 12px; font-weight: bold; color: var(--accent-color);">🔗 キャラ同士の関係性を追加・更新</div>
         <div class="relation-row">
           <select class="select-input" id="rel-from"></select>
-          <!-- 🌟 追加：矢印の向き選択 (片道 / 双方向) -->
           <select class="select-input" id="rel-dir" style="width: 70px;">
             <option value="one">➔ (片道)</option>
             <option value="both">⇄ (両方)</option>
@@ -206,14 +203,14 @@
       <div><div class="section-title">性格</div><div class="text-block-box" id="m-personality" contenteditable="false" onblur="saveCurrentModalData()"></div></div>
       <div><div class="section-title">設定・背景</div><div class="text-block-box" id="m-setting" contenteditable="false" onblur="saveCurrentModalData()"></div></div>
       
-      <!-- 🌟 改修：複数イメソンリスト＆追加フォーム -->
+      <!-- 🎯 イメソン追加エリア（開いているキャラ専用） -->
       <div>
         <div class="section-title">🎵 イメソン</div>
         <div id="m-songs-list"></div>
         <div class="edit-controls" style="gap: 6px; margin-top: 8px;">
           <input type="text" class="text-input" id="new-song-title" placeholder="曲名 (例: マルベリー / Be My Guest)">
           <input type="text" class="text-input" id="new-song-url" placeholder="YouTube URLなど (任意)" oninput="autoFillSongTitle(this.value)">
-          <button class="file-btn" onclick="addSongToCharacter()">+ イメソンを追加</button>
+          <button class="file-btn" onclick="addSongToCharacter()">+ このキャラにイメソンを追加</button>
         </div>
       </div>
       
@@ -250,7 +247,6 @@
             characters = found.data.characters || [];
             relations = found.data.relations || [];
             
-            // 旧バージョンのイメソンデータ(文字列)を配列形式に互換変換
             characters.forEach(c => {
               if (typeof c.song === 'string' && c.song.trim() !== '') {
                 c.songs = [{ title: c.song, url: c.song.startsWith('http') ? c.song : '' }];
@@ -416,7 +412,6 @@
       });
     }
 
-    // イメソンまとめ表示
     function renderPlaylist() {
       const box = document.getElementById('playlist-container');
       box.innerHTML = '';
@@ -455,7 +450,7 @@
     async function saveRelation() {
       const from = document.getElementById('rel-from').value;
       const to = document.getElementById('rel-to').value;
-      const dir = document.getElementById('rel-dir').value; // 'one' or 'both'
+      const dir = document.getElementById('rel-dir').value;
       const label = document.getElementById('rel-label').value.trim();
       if (from === to) return alert("違うキャラクターを選んでください");
       if (!label) return alert("関係性を入力してください");
@@ -472,7 +467,6 @@
       renderRelations();
     }
 
-    // 全体相関図表示
     function renderRelations() {
       const box = document.getElementById('relations-container');
       box.innerHTML = '';
@@ -515,7 +509,7 @@
     }
 
     function openDetailModal(id) {
-      activeModalId = id;
+      activeModalId = id; // 🎯 開いているキャラのIDを保持
       const c = characters.find(x => x.id === id);
       if (!c) return;
       document.getElementById('m-icon').src = c.icon || '';
@@ -550,7 +544,7 @@
       applyEditableState();
     }
 
-    // モーダル内のイメソン描画
+    // 開いているキャラのイメソンを表示
     function renderModalSongs(char) {
       const box = document.getElementById('m-songs-list');
       box.innerHTML = '';
@@ -575,15 +569,14 @@
       });
     }
 
-    // URL入力時のタイトル自動補完アシスト
     function autoFillSongTitle(val) {
       const titleInput = document.getElementById('new-song-title');
       if (val.startsWith('http') && (!titleInput.value || titleInput.value.startsWith('http'))) {
-        titleInput.value = val; // URLが貼られたら一時的にタイトル欄にもセット
+        titleInput.value = val;
       }
     }
 
-    // イメソン追加
+    // 🎯 正しいキャラ（activeModalId）にイメソンを追加する関数
     async function addSongToCharacter() {
       if (!activeModalId) return;
       const c = characters.find(x => x.id === activeModalId);
@@ -605,7 +598,7 @@
       renderModalSongs(c);
     }
 
-    // イメソン削除
+    // 🎯 開いているキャラからイメソンを削除
     async function deleteSongFromCharacter(idx) {
       if (!activeModalId) return;
       const c = characters.find(x => x.id === activeModalId);
@@ -616,7 +609,6 @@
       }
     }
 
-    // モーダル内の個別相関図描画
     function renderModalRelations(char) {
       const listEl = document.getElementById('m-relations-list');
       listEl.innerHTML = '';
