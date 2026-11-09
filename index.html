@@ -85,7 +85,7 @@
     .edit-controls { display: none; margin-top: 10px; flex-direction: column; gap: 6px; }
     .edit-active .edit-controls { display: flex; }
     .text-input, .select-input { background: #111; border: 1px solid var(--border-color); color: #fff; padding: 6px 8px; font-size: 12px; border-radius: 6px; width: 100%; }
-    .file-btn { background: var(--accent-color); color: white; padding: 6px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; text-align: center; display: inline-block; font-weight: bold; }
+    .file-btn { background: var(--accent-color); color: white; padding: 6px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; text-align: center; display: inline-block; font-weight: bold; border: none; }
     .edit-active [contenteditable="true"] { outline: 2px dashed var(--accent-color); outline-offset: 2px; border-radius: 4px; }
     .add-char-btn { display: none; width: 100%; padding: 14px; margin-top: 16px; background: rgba(99, 102, 241, 0.1); border: 2px dashed var(--accent-color); color: var(--accent-color); border-radius: 12px; font-weight: 600; cursor: pointer; }
     .edit-active .add-char-btn { display: block; }
@@ -95,6 +95,11 @@
     
     .modal-relation-list { list-style: none; padding: 0; margin: 0; font-size: 12px; }
     .modal-relation-list li { background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); padding: 8px 10px; border-radius: 6px; margin-bottom: 6px; }
+
+    /* イメソンリストスタイル */
+    .song-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); padding: 8px 10px; border-radius: 6px; margin-bottom: 6px; font-size: 12px; }
+    .song-title { font-weight: bold; color: var(--text-main); }
+    .song-link { color: var(--accent-color); text-decoration: none; font-size: 11px; }
   </style>
 </head>
 <body>
@@ -139,14 +144,17 @@
         <div style="font-size: 12px; font-weight: bold; color: var(--accent-color);">🔗 キャラ同士の関係性を追加・更新</div>
         <div class="relation-row">
           <select class="select-input" id="rel-from"></select>
-          <span style="font-size: 12px; color: var(--text-sub);">➔</span>
+          <!-- 🌟 追加：矢印の向き選択 (片道 / 双方向) -->
+          <select class="select-input" id="rel-dir" style="width: 70px;">
+            <option value="one">➔ (片道)</option>
+            <option value="both">⇄ (両方)</option>
+          </select>
           <select class="select-input" id="rel-to"></select>
         </div>
-        <input type="text" class="text-input" id="rel-label" placeholder="関係性 (例: 幼馴染、ライバルなど)">
+        <input type="text" class="text-input" id="rel-label" placeholder="関係性 (例: 片思い、両思い、ライバルなど)">
         <button class="file-btn" onclick="saveRelation()">関係性を保存する</button>
       </div>
 
-      <!-- 🌟 追加：相関図ページ内でのキャラ別フィルタータブ -->
       <div class="controls-bar" style="margin-bottom: 12px;">
         <div style="font-size: 11px; color: var(--text-sub); margin-bottom: 4px;">表示するキャラクターで絞り込み:</div>
         <div class="tag-tabs" id="rel-filter-tabs"></div>
@@ -197,7 +205,17 @@
       </div>
       <div><div class="section-title">性格</div><div class="text-block-box" id="m-personality" contenteditable="false" onblur="saveCurrentModalData()"></div></div>
       <div><div class="section-title">設定・背景</div><div class="text-block-box" id="m-setting" contenteditable="false" onblur="saveCurrentModalData()"></div></div>
-      <div><div class="section-title">イメソン</div><div class="text-block-box" id="m-song" contenteditable="false" onblur="saveCurrentModalData()"></div></div>
+      
+      <!-- 🌟 改修：複数イメソンリスト＆追加フォーム -->
+      <div>
+        <div class="section-title">🎵 イメソン</div>
+        <div id="m-songs-list"></div>
+        <div class="edit-controls" style="gap: 6px; margin-top: 8px;">
+          <input type="text" class="text-input" id="new-song-title" placeholder="曲名 (例: マルベリー / Be My Guest)">
+          <input type="text" class="text-input" id="new-song-url" placeholder="YouTube URLなど (任意)" oninput="autoFillSongTitle(this.value)">
+          <button class="file-btn" onclick="addSongToCharacter()">+ イメソンを追加</button>
+        </div>
+      </div>
       
       <div>
         <div class="section-title">🔗 相関関係 (このキャラに関わるもの)</div>
@@ -219,7 +237,7 @@
     let isEditMode = false;
     let activeModalId = null;
     let activeTagFilter = 'ALL';
-    let activeRelCharFilter = 'ALL'; // 相関図用フィルター
+    let activeRelCharFilter = 'ALL';
 
     async function loadData() {
       try {
@@ -231,6 +249,16 @@
           if (found && found.data) {
             characters = found.data.characters || [];
             relations = found.data.relations || [];
+            
+            // 旧バージョンのイメソンデータ(文字列)を配列形式に互換変換
+            characters.forEach(c => {
+              if (typeof c.song === 'string' && c.song.trim() !== '') {
+                c.songs = [{ title: c.song, url: c.song.startsWith('http') ? c.song : '' }];
+                delete c.song;
+              } else if (!c.songs) {
+                c.songs = [];
+              }
+            });
           }
         }
       } catch (e) {
@@ -339,7 +367,6 @@
       });
     }
 
-    // 相関図用キャラフィルタータブ
     function renderRelationFilterTabs() {
       const box = document.getElementById('rel-filter-tabs');
       box.innerHTML = '';
@@ -389,19 +416,26 @@
       });
     }
 
-    function linkifyText(text) {
-      if (!text) return '';
-      return text.replace(/(https?:\/\/[^\s]+)/g, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:var(--accent-color);">▶ 試聴する（YouTube等）</a>`);
-    }
-
+    // イメソンまとめ表示
     function renderPlaylist() {
       const box = document.getElementById('playlist-container');
       box.innerHTML = '';
       characters.forEach(c => {
-        if (c.song) {
+        if (c.songs && c.songs.length > 0) {
           const card = document.createElement('div');
           card.className = 'content-card';
-          card.innerHTML = `<div style="font-weight:bold; font-size:14px; margin-bottom:6px; color:var(--accent-color);">${c.name}</div><div style="color:var(--text-main); font-size:13px; line-height:1.5;">🎵 ${linkifyText(c.song)}</div>`;
+          
+          let songsHtml = c.songs.map(s => `
+            <div style="margin-top:4px;">
+              🎵 <strong>${s.title}</strong>
+              ${s.url ? `<a href="${s.url}" target="_blank" rel="noopener noreferrer" class="song-link" style="margin-left:8px;">▶ 試聴する</a>` : ''}
+            </div>
+          `).join('');
+
+          card.innerHTML = `
+            <div style="font-weight:bold; font-size:14px; margin-bottom:6px; color:var(--accent-color);">${c.name}</div>
+            <div style="color:var(--text-main); font-size:13px; line-height:1.5;">${songsHtml}</div>
+          `;
           box.appendChild(card);
         }
       });
@@ -421,37 +455,48 @@
     async function saveRelation() {
       const from = document.getElementById('rel-from').value;
       const to = document.getElementById('rel-to').value;
+      const dir = document.getElementById('rel-dir').value; // 'one' or 'both'
       const label = document.getElementById('rel-label').value.trim();
       if (from === to) return alert("違うキャラクターを選んでください");
       if (!label) return alert("関係性を入力してください");
+      
       const existing = relations.find(r => r.from === from && r.to === to);
-      if (existing) existing.label = label;
-      else relations.push({ from, to, label });
+      if (existing) {
+        existing.label = label;
+        existing.dir = dir;
+      } else {
+        relations.push({ from, to, label, dir });
+      }
       await saveData();
       document.getElementById('rel-label').value = '';
       renderRelations();
     }
 
+    // 全体相関図表示
     function renderRelations() {
       const box = document.getElementById('relations-container');
       box.innerHTML = '';
 
-      // フィルターの適用
       let displayRels = [...relations];
       if (activeRelCharFilter !== 'ALL') {
         displayRels = relations.filter(r => r.from === activeRelCharFilter || r.to === activeRelCharFilter);
       }
 
       displayRels.forEach((r) => {
-        const idx = relations.indexOf(r); // 元配列のインデックス
+        const idx = relations.indexOf(r);
         const fromChar = characters.find(c => c.id === r.from);
         const toChar = characters.find(c => c.id === r.to);
         if (!fromChar || !toChar) return;
+        
+        const arrowStr = r.dir === 'both' ? '⇄' : '➔';
+
         const card = document.createElement('div');
         card.className = 'content-card';
         card.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="font-size:13px; font-weight:bold;"><span style="color:var(--accent-color);">${fromChar.name}</span> ➔ <span style="color:var(--accent-color);">${toChar.name}</span></div>
+            <div style="font-size:13px; font-weight:bold;">
+              <span style="color:var(--accent-color);">${fromChar.name}</span> ${arrowStr} <span style="color:var(--accent-color);">${toChar.name}</span>
+            </div>
             ${isEditMode ? `<button onclick="deleteRelation(${idx})" style="background:none; border:none; color:var(--danger-color); font-size:11px; cursor:pointer; font-weight:bold;">削除</button>` : ''}
           </div>
           <div style="margin-top:6px; color:var(--text-main); font-size:13px; background:rgba(0,0,0,0.2); padding:8px; border-radius:6px;">${r.label}</div>
@@ -489,9 +534,6 @@
       
       document.getElementById('m-personality').innerText = c.personality || '';
       document.getElementById('m-setting').innerText = c.setting || '';
-      const songBox = document.getElementById('m-song');
-      songBox.innerText = isEditMode ? (c.song || '') : '';
-      if (!isEditMode) songBox.innerHTML = linkifyText(c.song || '');
       
       const tagContainer = document.getElementById('m-tags-container');
       tagContainer.innerHTML = '';
@@ -501,12 +543,80 @@
       document.getElementById('m-tags-input').value = (c.tags || []).join(', ');
       renderModalGallery(c.gallery || []);
 
+      renderModalSongs(c);
       renderModalRelations(c);
 
       document.getElementById('detail-modal').style.display = 'flex';
       applyEditableState();
     }
 
+    // モーダル内のイメソン描画
+    function renderModalSongs(char) {
+      const box = document.getElementById('m-songs-list');
+      box.innerHTML = '';
+      if (!char.songs) char.songs = [];
+
+      if (char.songs.length === 0) {
+        box.innerHTML = '<div style="font-size:12px; color:var(--text-sub); padding:4px 0;">登録されているイメソンはありません</div>';
+        return;
+      }
+
+      char.songs.forEach((s, idx) => {
+        const item = document.createElement('div');
+        item.className = 'song-item';
+        item.innerHTML = `
+          <div>
+            <span class="song-title">🎵 ${s.title}</span>
+            ${s.url ? `<br><a href="${s.url}" target="_blank" rel="noopener noreferrer" class="song-link">▶ 試聴する (YouTube等)</a>` : ''}
+          </div>
+          ${isEditMode ? `<button onclick="deleteSongFromCharacter(${idx})" style="background:none; border:none; color:var(--danger-color); font-size:11px; cursor:pointer; font-weight:bold;">削除</button>` : ''}
+        `;
+        box.appendChild(item);
+      });
+    }
+
+    // URL入力時のタイトル自動補完アシスト
+    function autoFillSongTitle(val) {
+      const titleInput = document.getElementById('new-song-title');
+      if (val.startsWith('http') && (!titleInput.value || titleInput.value.startsWith('http'))) {
+        titleInput.value = val; // URLが貼られたら一時的にタイトル欄にもセット
+      }
+    }
+
+    // イメソン追加
+    async function addSongToCharacter() {
+      if (!activeModalId) return;
+      const c = characters.find(x => x.id === activeModalId);
+      if (!c) return;
+
+      const titleInput = document.getElementById('new-song-title');
+      const urlInput = document.getElementById('new-song-url');
+      const title = titleInput.value.trim();
+      const url = urlInput.value.trim();
+
+      if (!title) return alert("曲名（またはリンク）を入力してください");
+
+      if (!c.songs) c.songs = [];
+      c.songs.push({ title, url });
+      await saveData();
+
+      titleInput.value = '';
+      urlInput.value = '';
+      renderModalSongs(c);
+    }
+
+    // イメソン削除
+    async function deleteSongFromCharacter(idx) {
+      if (!activeModalId) return;
+      const c = characters.find(x => x.id === activeModalId);
+      if (c && c.songs) {
+        c.songs.splice(idx, 1);
+        await saveData();
+        renderModalSongs(c);
+      }
+    }
+
+    // モーダル内の個別相関図描画
     function renderModalRelations(char) {
       const listEl = document.getElementById('m-relations-list');
       listEl.innerHTML = '';
@@ -519,12 +629,16 @@
 
       myRels.forEach(r => {
         const li = document.createElement('li');
+        const isBoth = r.dir === 'both';
+
         if (r.from === char.id) {
           const target = characters.find(x => x.id === r.to);
-          li.innerHTML = `➔ <strong style="color:var(--accent-color);">${target ? target.name : '不明'}</strong> へ: [ ${r.label} ]`;
+          const arrow = isBoth ? '⇄' : '➔';
+          li.innerHTML = `${arrow} <strong style="color:var(--accent-color);">${target ? target.name : '不明'}</strong> へ: [ ${r.label} ] ${isBoth ? '(お互い)' : ''}`;
         } else {
           const target = characters.find(x => x.id === r.from);
-          li.innerHTML = `⬅ <strong style="color:var(--accent-color);">${target ? target.name : '不明'}</strong> から: [ ${r.label} ]`;
+          const arrow = isBoth ? '⇄' : '⬅';
+          li.innerHTML = `${arrow} <strong style="color:var(--accent-color);">${target ? target.name : '不明'}</strong> から: [ ${r.label} ] ${isBoth ? '(お互い)' : ''}`;
         }
         listEl.appendChild(li);
       });
@@ -577,10 +691,14 @@
       }
       applyEditableState();
       renderRelations();
+      if (activeModalId) {
+        const c = characters.find(x => x.id === activeModalId);
+        if (c) renderModalSongs(c);
+      }
     }
 
     function applyEditableState() {
-      const editables = ['m-name', 'm-ruby', 'm-age', 'm-height', 'm-birth', 'm-first', 'm-second', 'm-color', 'm-personality', 'm-setting', 'm-song'];
+      const editables = ['m-name', 'm-ruby', 'm-age', 'm-height', 'm-birth', 'm-first', 'm-second', 'm-color', 'm-personality', 'm-setting'];
       editables.forEach(id => { const el = document.getElementById(id); if (el) el.contentEditable = isEditMode; });
       document.getElementById('m-color-picker').style.display = isEditMode ? 'inline-block' : 'none';
     }
@@ -603,7 +721,6 @@
 
       c.personality = document.getElementById('m-personality').innerText;
       c.setting = document.getElementById('m-setting').innerText;
-      c.song = document.getElementById('m-song').innerText;
       c.tags = document.getElementById('m-tags-input').value.split(',').map(s => s.trim()).filter(s => s.length > 0);
       await saveData();
     }
@@ -625,7 +742,7 @@
         id: newId, createdAt: Date.now(), tags: ["MAIN"],
         name: "新規キャラ", ruby: "しんき きゃら", age: "16歳", height: "160cm", birth: "1月1日",
         firstPerson: "私", secondPerson: "あなた", color: "#6366f1",
-        personality: "", setting: "", song: "",
+        personality: "", setting: "", songs: [],
         icon: "https://via.placeholder.com/150", gallery: []
       };
       characters.push(newChar);
