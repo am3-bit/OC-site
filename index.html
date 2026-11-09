@@ -2,265 +2,618 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>うちの子図鑑 & 相関図</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>CHARACTER ARCHIVE - Supabase Sync</title>
+  <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // 🔑 あなたのSupabaseのURLとAnon Key
+    const SUPABASE_URL = "https://jqbbntrbfuyvmffkthp.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_LiAdmm_808bLL_wWM3Todw_8_QdhDgz";
+    
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  </script>
   <style>
     :root {
-      --bg-color: #f4f6f9;
-      --card-bg: #ffffff;
-      --text-color: #333333;
-      --accent-color: #6c5ce7;
-      --danger-color: #ff7675;
-      --border-radius: 12px;
+      --bg-color: #0f1115;
+      --card-bg: #1a1d24;
+      --accent-color: #6366f1;
+      --text-main: #f3f4f6;
+      --text-sub: #9ca3af;
+      --border-color: #2e333d;
+      --danger-color: #ef4444;
     }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      margin: 0;
-      padding: 20px;
-    }
-
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    h1, h2 {
-      color: var(--accent-color);
-      margin: 0;
-    }
-
-    .section {
-      background: var(--card-bg);
-      padding: 20px;
-      border-radius: var(--border-radius);
-      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-      margin-bottom: 25px;
-    }
-
-    /* 編集モードでのみ表示するエリア */
-    .edit-only {
-      display: none;
-    }
-    body.editing .edit-only {
-      display: block;
-    }
-
-    /* フォーム周り */
-    .form-group {
-      margin-bottom: 15px;
-    }
-    label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-    input, textarea, select {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      box-sizing: border-box;
-    }
-    button {
-      background: var(--accent-color);
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: opacity 0.2s;
-    }
-    button:hover {
-      opacity: 0.9;
-    }
-    .btn-danger {
-      background: var(--danger-color);
-      padding: 5px 10px;
-      font-size: 0.8em;
-    }
-    .btn-mode {
-      background: #b2bec3;
-    }
-    body.editing .btn-mode {
-      background: #e17055;
-    }
-
-    /* キャラ一覧グリッド */
-    .character-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 20px;
-    }
-    .character-card {
-      background: var(--card-bg);
-      border-radius: var(--border-radius);
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 15px;
-      position: relative;
-    }
-    .character-img {
-      width: 120px;
-      height: 120px;
-      object-fit: cover;
-      border-radius: 50%;
-      background: #eee;
-      margin-bottom: 10px;
-    }
-
-    /* カラープレビュー表示 */
-    .color-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.9em;
-      margin-top: 4px;
-    }
-    .color-dot {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      border: 1px solid rgba(0,0,0,0.2);
-      display: inline-block;
-    }
-
-    /* 相関図カード表示 */
-    .relation-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .relation-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #f8f9fa;
-      padding: 12px;
-      border-radius: 8px;
-      border-left: 4px solid var(--accent-color);
-    }
-
-    /* モーダル */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    .modal-content {
-      background: white;
-      padding: 25px;
-      border-radius: var(--border-radius);
-      max-width: 500px;
-      width: 90%;
-      max-height: 80vh;
-      overflow-y: auto;
-      position: relative;
-    }
-    .close-btn {
-      position: absolute;
-      top: 15px; right: 15px;
-      font-size: 1.5em;
-      cursor: pointer;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; padding-bottom: 40px; overflow-x: hidden; }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: rgba(15, 17, 21, 0.9); backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border-color); }
+    h1 { font-size: 16px; letter-spacing: 2px; font-weight: 700; }
+    .header-btns { display: flex; gap: 10px; align-items: center; }
+    .icon-btn { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main); font-size: 13px; cursor: pointer; padding: 6px 12px; border-radius: 6px; font-weight: bold; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px 16px; }
+    .tabs-bar { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
+    .tab-nav-btn { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-sub); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .tab-nav-btn.active { background: var(--accent-color); color: white; border-color: var(--accent-color); }
+    .controls-bar { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    .sort-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-sub); }
+    .sort-select { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 8px; border-radius: 6px; font-size: 12px; }
+    .tag-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+    .tag-btn { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-sub); padding: 4px 10px; border-radius: 14px; font-size: 11px; white-space: nowrap; cursor: pointer; }
+    .tag-btn.active { background: var(--accent-color); color: white; border-color: var(--accent-color); }
+    .char-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .grid-item { cursor: pointer; text-align: center; }
+    .icon-wrapper { width: 100%; aspect-ratio: 1 / 1; background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
+    .icon-wrapper:hover { transform: scale(1.03); border-color: var(--accent-color); }
+    .icon-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+    .char-name-label { margin-top: 6px; font-size: 13px; font-weight: 600; color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .char-ruby-label { font-size: 10px; color: var(--text-sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px; }
+    .section-view { display: none; }
+    .section-view.active { display: block; }
+    .content-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    .section-title { font-size: 11px; letter-spacing: 1px; color: var(--text-sub); margin-bottom: 8px; text-transform: uppercase; font-weight: bold; }
+    .relation-builder { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
+    .relation-row { display: flex; gap: 8px; align-items: center; }
+    #detail-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1000; justify-content: center; align-items: center; padding: 16px; }
+    .modal-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; padding: 20px; position: relative; display: flex; flex-direction: column; gap: 16px; }
+    .modal-close { position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.1); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; z-index: 10; }
+    .modal-header-grid { display: grid; grid-template-columns: 100px 1fr; gap: 14px; align-items: center; }
+    .modal-icon-box { width: 100px; height: 100px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color); }
+    .modal-icon-box img { width: 100%; height: 100%; object-fit: cover; }
+    .modal-title-area h2 { font-size: 18px; margin-bottom: 2px; }
+    .modal-ruby { font-size: 11px; color: var(--text-sub); margin-bottom: 6px; }
+    .tag-badge-container { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+    .tag-badge { font-size: 10px; background: rgba(99, 102, 241, 0.2); color: #818cf8; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+    .profile-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); }
+    .profile-meta-item { display: flex; gap: 6px; align-items: center; }
+    .meta-lbl { color: var(--text-sub); width: 50px; flex-shrink: 0; }
+    .meta-val { color: var(--text-main); font-weight: 500; }
+    
+    /* カラープレビュー用スタイル */
+    .color-picker-wrapper { display: flex; align-items: center; gap: 6px; }
+    .color-preview-dot { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3); display: inline-block; flex-shrink: 0; }
+    .color-input { -webkit-appearance: none; border: none; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; background: none; }
+    .color-input::-webkit-color-swatch-wrapper { padding: 0; }
+    .color-input::-webkit-color-swatch { border: 1px solid var(--border-color); border-radius: 50%; }
+    
+    .text-block-box { background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-break: break-all; }
+    .horizontal-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
+    .gallery-thumb { width: 90px; height: 90px; flex-shrink: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); background: #111; cursor: pointer; position: relative; }
+    .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .del-img-btn { position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 10px; display: none; }
+    .edit-active .del-img-btn { display: block; }
+    #image-viewer-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 2000; justify-content: center; align-items: center; touch-action: none; }
+    #image-viewer-img { max-width: 95%; max-height: 85vh; object-fit: contain; border-radius: 8px; transition: transform 0.1s ease-out, opacity 0.1s ease-out; }
+    .viewer-close-btn { position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.2); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 2010; }
+    .edit-controls { display: none; margin-top: 10px; flex-direction: column; gap: 6px; }
+    .edit-active .edit-controls { display: flex; }
+    .text-input, .select-input { background: #111; border: 1px solid var(--border-color); color: #fff; padding: 6px 8px; font-size: 12px; border-radius: 6px; width: 100%; }
+    .file-btn { background: var(--accent-color); color: white; padding: 6px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; text-align: center; display: inline-block; font-weight: bold; }
+    .edit-active [contenteditable="true"] { outline: 2px dashed var(--accent-color); outline-offset: 2px; border-radius: 4px; }
+    .add-char-btn { display: none; width: 100%; padding: 14px; margin-top: 16px; background: rgba(99, 102, 241, 0.1); border: 2px dashed var(--accent-color); color: var(--accent-color); border-radius: 12px; font-weight: 600; cursor: pointer; }
+    .edit-active .add-char-btn { display: block; }
+    .del-btn { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 6px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: bold; width: 100%; text-align: center; margin-top: 8px; display: none; }
+    .edit-active .del-btn { display: block; }
+    .loading-text { font-size: 11px; color: var(--accent-color); font-weight: bold; display: none; margin-top: 4px; }
+    
+    /* 個別相関リストのスタイル */
+    .modal-relation-list { list-style: none; padding: 0; margin: 0; font-size: 12px; }
+    .modal-relation-list li { background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); padding: 8px 10px; border-radius: 6px; margin-bottom: 6px; }
   </style>
 </head>
 <body>
 
-<div class="container">
   <header>
-    <h1>🎨 うちの子図鑑 & 相関図</h1>
-    <button class="btn-mode" id="mode-toggle-btn" onclick="toggleEditMode()">🔒 閲覧モード (編集する)</button>
+    <h1>OC DATABASE</h1>
+    <div class="header-btns">
+      <button class="icon-btn" id="lock-btn" onclick="toggleLock()">🔒 編集ロック</button>
+    </div>
   </header>
 
-  <!-- 1. 新規キャラ登録（編集モード時のみ表示） -->
-  <div class="section edit-only">
-    <h2>➕ キャラクター作成</h2>
-    <form id="char-form">
-      <div class="form-group">
-        <label>名前</label>
-        <input type="text" id="char-name" required placeholder="例: アリス">
+  <main class="container">
+    <div class="tabs-bar">
+      <button class="tab-nav-btn active" onclick="switchTab('chars')">キャラクター</button>
+      <button class="tab-nav-btn" onclick="switchTab('playlist')">イメソンまとめ</button>
+      <button class="tab-nav-btn" onclick="switchTab('relations')">相関図</button>
+    </div>
+
+    <section id="chars-section" class="section-view active">
+      <div class="controls-bar">
+        <div class="sort-row">
+          <span>並び替え</span>
+          <select class="sort-select" id="sort-select" onchange="renderGrid()">
+            <option value="default">追加順 (デフォルト)</option>
+            <option value="name-asc">五十音順</option>
+            <option value="height-asc">身長順 (低い順)</option>
+            <option value="height-desc">身長順 (高い順)</option>
+            <option value="birthday-asc">誕生日順</option>
+          </select>
+        </div>
+        <div class="tag-tabs" id="tag-tabs"></div>
       </div>
-      <div class="form-group">
-        <label>イメージカラー (カラーコードまたは色名)</label>
-        <input type="text" id="char-color" placeholder="例: #ff7675 や red">
+      <div class="char-grid" id="char-grid"></div>
+      <button class="add-char-btn" onclick="addNewCharacter()">+ キャラクターを追加する</button>
+    </section>
+
+    <section id="playlist-section" class="section-view"><div id="playlist-container"></div></section>
+    <section id="relations-section" class="section-view">
+      <div class="relation-builder edit-controls">
+        <div style="font-size: 12px; font-weight: bold; color: var(--accent-color);">🔗 キャラ同士の関係性を追加・更新</div>
+        <div class="relation-row">
+          <select class="select-input" id="rel-from"></select>
+          <span style="font-size: 12px; color: var(--text-sub);">➔</span>
+          <select class="select-input" id="rel-to"></select>
+        </div>
+        <input type="text" class="text-input" id="rel-label" placeholder="関係性 (例: 幼馴染、ライバルなど)">
+        <button class="file-btn" onclick="saveRelation()">関係性を保存する</button>
       </div>
-      <div class="form-group">
-        <label>プロフィール・設定</label>
-        <textarea id="char-memo" rows="3" placeholder="性格や生い立ちなど"></textarea>
+      <div id="relations-container"></div>
+    </section>
+  </main>
+
+  <div id="detail-modal">
+    <div class="modal-card" id="modal-card-box">
+      <button class="modal-close" onclick="closeDetailModal()">✕</button>
+      <div class="modal-header-grid">
+        <div class="modal-icon-box"><img id="m-icon" src="" alt=""></div>
+        <div class="modal-title-area">
+          <div class="tag-badge-container" id="m-tags-container"></div>
+          <div class="modal-ruby" id="m-ruby" contenteditable="false" onblur="saveCurrentModalData()">よみがな</div>
+          <h2 id="m-name" contenteditable="false" onblur="saveCurrentModalData()"></h2>
+        </div>
       </div>
-      <div class="form-group">
-        <label>画像 (任意)</label>
-        <input type="file" id="char-file" accept="image/*">
+      <div class="edit-controls">
+        <label class="file-btn">📁 アイコン画像を選択<input type="file" accept="image/*" style="display:none" onchange="uploadIconToSupabase(this)"></label>
+        <div id="icon-upload-status" class="loading-text">⚡ Supabaseへ送信中...</div>
+        <input type="text" class="text-input" id="m-tags-input" placeholder="世界線タグをカンマ(,)区切りで入力" onblur="saveCurrentModalData()">
       </div>
-      <button type="submit">保存する</button>
-    </form>
+      <div class="profile-details-grid">
+        <div class="profile-meta-item"><span class="meta-lbl">年齢:</span><span class="meta-val" id="m-age" contenteditable="false" onblur="saveCurrentModalData()">-</span></div>
+        <div class="profile-meta-item"><span class="meta-lbl">身長:</span><span class="meta-val" id="m-height" contenteditable="false" onblur="saveCurrentModalData()">-</span></div>
+        <div class="profile-meta-item"><span class="meta-lbl">誕生日:</span><span class="meta-val" id="m-birth" contenteditable="false" onblur="saveCurrentModalData()">-</span></div>
+        <div class="profile-meta-item"><span class="meta-lbl">一人称:</span><span class="meta-val" id="m-first" contenteditable="false" onblur="saveCurrentModalData()">-</span></div>
+        <div class="profile-meta-item"><span class="meta-lbl">二人称:</span><span class="meta-val" id="m-second" contenteditable="false" onblur="saveCurrentModalData()">-</span></div>
+        <div class="profile-meta-item">
+          <span class="meta-lbl">イメカラ:</span>
+          <div class="color-picker-wrapper">
+            <span class="color-preview-dot" id="m-color-dot" style="background-color: transparent;"></span>
+            <span class="meta-val" id="m-color" contenteditable="false" onblur="saveCurrentModalData()">-</span>
+            <input type="color" class="color-input edit-controls" id="m-color-picker" onchange="onColorPickerChange(this.value)">
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="section-title">GALLERY (イラスト)</div>
+        <div class="horizontal-scroll" id="m-gallery"></div>
+        <div class="edit-controls">
+          <label class="file-btn">📁 イラストを追加する<input type="file" accept="image/*" multiple style="display:none" onchange="uploadGalleryToSupabase(this)"></label>
+          <div id="gallery-upload-status" class="loading-text">⚡ イラストを送信中...</div>
+        </div>
+      </div>
+      <div><div class="section-title">性格</div><div class="text-block-box" id="m-personality" contenteditable="false" onblur="saveCurrentModalData()"></div></div>
+      <div><div class="section-title">設定・背景</div><div class="text-block-box" id="m-setting" contenteditable="false" onblur="saveCurrentModalData()"></div></div>
+      <div><div class="section-title">イメソン</div><div class="text-block-box" id="m-song" contenteditable="false" onblur="saveCurrentModalData()"></div></div>
+      
+      <!-- 個別キャラの相関図 -->
+      <div>
+        <div class="section-title">🔗 相関関係 (このキャラに関わるもの)</div>
+        <ul class="modal-relation-list" id="m-relations-list"></ul>
+      </div>
+
+      <button class="del-btn" onclick="deleteCurrentCharacter()">このキャラクターを削除する</button>
+    </div>
   </div>
 
-  <!-- 2. キャラ一覧 -->
-  <div class="section">
-    <h2>👥 キャラクター一覧</h2>
-    <div class="character-grid" id="character-list"></div>
+  <div id="image-viewer-modal">
+    <button class="viewer-close-btn" onclick="closeImageViewer()">✕</button>
+    <img id="image-viewer-img" src="" alt="">
   </div>
 
-  <!-- 3. 相関図追加（編集モード時のみ表示） -->
-  <div class="section edit-only">
-    <h2>🔗 関係性の追加</h2>
-    <form id="relation-form">
-      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-        <select id="rel-from" required></select>
-        <span style="align-self: center;">➡️</span>
-        <input type="text" id="rel-label" placeholder="例: ライバル / 幼馴染" required style="flex: 1;">
-        <span style="align-self: center;">➡️</span>
-        <select id="rel-to" required></select>
-      </div>
-      <button type="submit" style="margin-top: 15px;">関係を追加</button>
-    </form>
-  </div>
+  <script>
+    let characters = [];
+    let relations = [];
+    let isEditMode = false;
+    let activeModalId = null;
+    let activeTagFilter = 'ALL';
 
-  <!-- 4. 全体の相関図一覧 -->
-  <div class="section">
-    <h2>🌐 相関関係一覧</h2>
-    <div class="relation-list" id="relation-list"></div>
-  </div>
-</div>
+    // Supabaseからデータをクラウドロードする関数
+    async function loadData() {
+      try {
+        const { data, error } = await supabaseClient.from('characters').select('*');
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          const found = data.find(row => row.id === 'main_db');
+          if (found && found.data) {
+            characters = found.data.characters || [];
+            relations = found.data.relations || [];
+          }
+        }
+      } catch (e) {
+        console.error('Load Error:', e);
+        characters = JSON.parse(localStorage.getItem('oc_chars')) || [];
+        relations = JSON.parse(localStorage.getItem('oc_rels')) || [];
+      }
+      renderTagTabs();
+      renderGrid();
+    }
 
-<!-- 個別閲覧モーダル -->
-<div class="modal" id="char-modal">
-  <div class="modal-content">
-    <span class="close-btn" onclick="closeModal()">&times;</span>
-    <div id="modal-body"></div>
-  </div>
-</div>
+    // Supabaseのクラウドへデータを自動保存する関数
+    async function saveData() {
+      localStorage.setItem('oc_chars', JSON.stringify(characters));
+      localStorage.setItem('oc_rels', JSON.stringify(relations));
 
-<script>
-  // 🔑 Supabase 設定
-  const SUPABASE_URL = "https://jqbbntrbfuyvmffkthp.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_LiAdmm_808bLL_wWM3Todw_8_QdhDgz";
-  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      try {
+        const payload = {
+          id: 'main_db',
+          data: { characters, relations }
+        };
+        const { error } = await supabaseClient.from('characters').upsert(payload);
+        if (error) console.error('Supabase Save Error:', error);
+      } catch (e) {
+        console.error('Save Exception:', e);
+      }
+    }
 
-  let appData = {
-    characters: [],
-    relations: []
-  };
+    // 起動時にロード
+    loadData();
 
-  let isEditing = false;
+    async function uploadFileToSupabase(file) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const { data, error } = await supabaseClient.storage.from('oc-images').upload(fileName, file);
+      if (error) { alert(`画像アップロード失敗: ${error.message}`); throw error; }
+      const { data: publicUrlData } = supabaseClient.storage.from('oc-images').getPublicUrl(fileName);
+      return publicUrlData.publicUrl;
+    }
+
+    async function uploadIconToSupabase(input) {
+      if (input.files && input.files[0]) {
+        const statusEl = document.getElementById('icon-upload-status');
+        statusEl.style.display = 'block';
+        try {
+          const url = await uploadFileToSupabase(input.files[0]);
+          if (activeModalId) {
+            const c = characters.find(x => x.id === activeModalId);
+            if (c) { c.icon = url; document.getElementById('m-icon').src = url; await saveData(); }
+          }
+        } finally { statusEl.style.display = 'none'; }
+      }
+    }
+
+    async function uploadGalleryToSupabase(input) {
+      if (!activeModalId || !input.files.length) return;
+      const c = characters.find(x => x.id === activeModalId);
+      if (!c) return;
+      if (!c.gallery) c.gallery = [];
+      const statusEl = document.getElementById('gallery-upload-status');
+      statusEl.style.display = 'block';
+      try {
+        for (let i = 0; i < input.files.length; i++) {
+          const url = await uploadFileToSupabase(input.files[i]);
+          c.gallery.push(url);
+        }
+        input.value = '';
+        renderModalGallery(c.gallery);
+        await saveData();
+      } finally { statusEl.style.display = 'none'; }
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-nav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.section-view').forEach(s => s.classList.remove('active'));
+      if (tabName === 'chars') {
+        document.querySelectorAll('.tab-nav-btn')[0].classList.add('active');
+        document.getElementById('chars-section').classList.add('active');
+        renderTagTabs(); renderGrid();
+      } else if (tabName === 'playlist') {
+        document.querySelectorAll('.tab-nav-btn')[1].classList.add('active');
+        document.getElementById('playlist-section').classList.add('active');
+        renderPlaylist();
+      } else if (tabName === 'relations') {
+        document.querySelectorAll('.tab-nav-btn')[2].classList.add('active');
+        document.getElementById('relations-section').classList.add('active');
+        populateRelationSelects(); renderRelations();
+      }
+    }
+
+    function getAllTags() {
+      const set = new Set();
+      characters.forEach(c => (c.tags || []).forEach(t => t.trim() && set.add(t.trim())));
+      return ['ALL', ...Array.from(set)];
+    }
+
+    function renderTagTabs() {
+      const tabsBox = document.getElementById('tag-tabs');
+      tabsBox.innerHTML = '';
+      getAllTags().forEach(t => {
+        const btn = document.createElement('button');
+        btn.className = `tag-btn ${activeTagFilter === t ? 'active' : ''}`;
+        btn.innerText = t === 'ALL' ? 'すべて' : `#${t}`;
+        btn.onclick = () => { activeTagFilter = t; renderTagTabs(); renderGrid(); };
+        tabsBox.appendChild(btn);
+      });
+    }
+
+    function extractNum(str) {
+      const m = (str || '').match(/(\d+)/);
+      return m ? parseInt(m[1], 10) : 9999;
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('char-grid');
+      grid.innerHTML = '';
+      const sortMode = document.getElementById('sort-select').value;
+      let list = activeTagFilter === 'ALL' ? [...characters] : characters.filter(c => (c.tags || []).includes(activeTagFilter));
+
+      if (sortMode === 'name-asc') list.sort((a, b) => (a.ruby || a.name || '').localeCompare(b.ruby || b.name || '', 'ja'));
+      else if (sortMode === 'height-asc') list.sort((a, b) => extractNum(a.height) - extractNum(b.height));
+      else if (sortMode === 'height-desc') list.sort((a, b) => extractNum(b.height) - extractNum(a.height));
+      else if (sortMode === 'birthday-asc') list.sort((a, b) => (a.birth || '').localeCompare(b.birth || ''));
+      else list.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+
+      list.forEach(c => {
+        const item = document.createElement('div');
+        item.className = 'grid-item';
+        item.onclick = () => openDetailModal(c.id);
+        item.innerHTML = `
+          <div class="icon-wrapper"><img src="${c.icon || 'https://via.placeholder.com/150'}"></div>
+          <div class="char-name-label">${c.name}</div>
+          <div class="char-ruby-label">${c.ruby || ''}</div>
+        `;
+        grid.appendChild(item);
+      });
+    }
+
+    function linkifyText(text) {
+      if (!text) return '';
+      return text.replace(/(https?:\/\/[^\s]+)/g, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:var(--accent-color);">▶ 試聴する（YouTube等）</a>`);
+    }
+
+    function renderPlaylist() {
+      const box = document.getElementById('playlist-container');
+      box.innerHTML = '';
+      characters.forEach(c => {
+        if (c.song) {
+          const card = document.createElement('div');
+          card.className = 'content-card';
+          card.innerHTML = `<div style="font-weight:bold; font-size:14px; margin-bottom:6px; color:var(--accent-color);">${c.name}</div><div style="color:var(--text-main); font-size:13px; line-height:1.5;">🎵 ${linkifyText(c.song)}</div>`;
+          box.appendChild(card);
+        }
+      });
+      if (box.innerHTML === '') box.innerHTML = `<div style="text-align:center; color:var(--text-sub); margin-top:30px; font-size:13px;">登録されているイメソンはありません</div>`;
+    }
+
+    function populateRelationSelects() {
+      const fromSel = document.getElementById('rel-from');
+      const toSel = document.getElementById('rel-to');
+      fromSel.innerHTML = ''; toSel.innerHTML = '';
+      characters.forEach(c => {
+        fromSel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+        toSel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+      });
+    }
+
+    async function saveRelation() {
+      const from = document.getElementById('rel-from').value;
+      const to = document.getElementById('rel-to').value;
+      const label = document.getElementById('rel-label').value.trim();
+      if (from === to) return alert("違うキャラクターを選んでください");
+      if (!label) return alert("関係性を入力してください");
+      const existing = relations.find(r => r.from === from && r.to === to);
+      if (existing) existing.label = label;
+      else relations.push({ from, to, label });
+      await saveData();
+      document.getElementById('rel-label').value = '';
+      renderRelations();
+    }
+
+    function renderRelations() {
+      const box = document.getElementById('relations-container');
+      box.innerHTML = '';
+      relations.forEach((r, idx) => {
+        const fromChar = characters.find(c => c.id === r.from);
+        const toChar = characters.find(c => c.id === r.to);
+        if (!fromChar || !toChar) return;
+        const card = document.createElement('div');
+        card.className = 'content-card';
+        card.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-size:13px; font-weight:bold;"><span style="color:var(--accent-color);">${fromChar.name}</span> ➔ <span style="color:var(--accent-color);">${toChar.name}</span></div>
+            ${isEditMode ? `<button onclick="deleteRelation(${idx})" style="background:none; border:none; color:var(--danger-color); font-size:11px; cursor:pointer; font-weight:bold;">削除</button>` : ''}
+          </div>
+          <div style="margin-top:6px; color:var(--text-main); font-size:13px; background:rgba(0,0,0,0.2); padding:8px; border-radius:6px;">${r.label}</div>
+        `;
+        box.appendChild(card);
+      });
+      if (box.innerHTML === '') box.innerHTML = `<div style="text-align:center; color:var(--text-sub); margin-top:30px; font-size:13px;">登録されている関係性はありません</div>`;
+    }
+
+    async function deleteRelation(idx) {
+      if (confirm('この関係性を削除しますか？')) {
+        relations.splice(idx, 1);
+        await saveData();
+        renderRelations();
+      }
+    }
+
+    function openDetailModal(id) {
+      activeModalId = id;
+      const c = characters.find(x => x.id === id);
+      if (!c) return;
+      document.getElementById('m-icon').src = c.icon || '';
+      document.getElementById('m-name').innerText = c.name || '';
+      document.getElementById('m-ruby').innerText = c.ruby || 'よみがな';
+      document.getElementById('m-age').innerText = c.age || '-';
+      document.getElementById('m-height').innerText = c.height || '-';
+      document.getElementById('m-birth').innerText = c.birth || '-';
+      document.getElementById('m-first').innerText = c.firstPerson || '-';
+      document.getElementById('m-second').innerText = c.secondPerson || '-';
+      
+      // イメカラプレビュー設定
+      const colorVal = c.color || '-';
+      document.getElementById('m-color').innerText = colorVal;
+      document.getElementById('m-color-dot').style.backgroundColor = colorVal !== '-' ? colorVal : 'transparent';
+      if (colorVal.startsWith('#')) document.getElementById('m-color-picker').value = colorVal;
+      
+      document.getElementById('m-personality').innerText = c.personality || '';
+      document.getElementById('m-setting').innerText = c.setting || '';
+      const songBox = document.getElementById('m-song');
+      songBox.innerText = isEditMode ? (c.song || '') : '';
+      if (!isEditMode) songBox.innerHTML = linkifyText(c.song || '');
+      
+      const tagContainer = document.getElementById('m-tags-container');
+      tagContainer.innerHTML = '';
+      (c.tags || []).forEach(t => {
+        const b = document.createElement('span'); b.className = 'tag-badge'; b.innerText = `#${t}`; tagContainer.appendChild(b);
+      });
+      document.getElementById('m-tags-input').value = (c.tags || []).join(', ');
+      renderModalGallery(c.gallery || []);
+
+      // キャラごとの個別相関図の描画
+      renderModalRelations(c);
+
+      document.getElementById('detail-modal').style.display = 'flex';
+      applyEditableState();
+    }
+
+    function renderModalRelations(char) {
+      const listEl = document.getElementById('m-relations-list');
+      listEl.innerHTML = '';
+      const myRels = relations.filter(r => r.from === char.id || r.to === char.id);
+
+      if (myRels.length === 0) {
+        listEl.innerHTML = '<li style="color:var(--text-sub);">関係性の登録はありません</li>';
+        return;
+      }
+
+      myRels.forEach(r => {
+        const li = document.createElement('li');
+        if (r.from === char.id) {
+          const target = characters.find(x => x.id === r.to);
+          li.innerHTML = `➔ <strong style="color:var(--accent-color);">${target ? target.name : '不明'}</strong> へ: [ ${r.label} ]`;
+        } else {
+          const target = characters.find(x => x.id === r.from);
+          li.innerHTML = `⬅ <strong style="color:var(--accent-color);">${target ? target.name : '不明'}</strong> から: [ ${r.label} ]`;
+        }
+        listEl.appendChild(li);
+      });
+    }
+
+    async function onColorPickerChange(hexValue) {
+      document.getElementById('m-color').innerText = hexValue;
+      document.getElementById('m-color-dot').style.backgroundColor = hexValue;
+      await saveCurrentModalData();
+    }
+
+    function closeDetailModal() {
+      document.getElementById('detail-modal').style.display = 'none';
+      activeModalId = null;
+      renderTagTabs(); renderGrid();
+    }
+
+    function renderModalGallery(galleryList) {
+      const gBox = document.getElementById('m-gallery');
+      gBox.innerHTML = '';
+      galleryList.forEach((url, idx) => {
+        const thumb = document.createElement('div');
+        thumb.className = 'gallery-thumb';
+        thumb.innerHTML = `<img src="${url}" onclick="openImageViewer('${url}')"><button class="del-img-btn" onclick="deleteGalleryImg(event, ${idx})">✕</button>`;
+        gBox.appendChild(thumb);
+      });
+      if (galleryList.length === 0) gBox.innerHTML = `<div style="font-size:12px; color:var(--text-sub); padding:10px 0;">画像なし</div>`;
+    }
+
+    const viewerModal = document.getElementById('image-viewer-modal');
+    const viewerImg = document.getElementById('image-viewer-img');
+    function openImageViewer(url) { viewerImg.src = url; viewerModal.style.display = 'flex'; }
+    function closeImageViewer() { viewerModal.style.display = 'none'; }
+
+    function toggleLock() {
+      isEditMode = !isEditMode;
+      const btn = document.getElementById('lock-btn');
+      if (isEditMode) {
+        const pass = prompt("編集パスワードを入力してください (初期: 1234):");
+        if (pass === "1234") { 
+          btn.innerText = "🔓 編集中"; 
+          document.body.classList.add('edit-active'); 
+        } else { 
+          isEditMode = false; 
+          alert("パスワードが違います"); 
+        }
+      } else { 
+        btn.innerText = "🔒 編集ロック"; 
+        document.body.classList.remove('edit-active'); 
+      }
+      applyEditableState();
+      renderRelations(); // 編集ボタン表示の切り替え
+    }
+
+    function applyEditableState() {
+      const editables = ['m-name', 'm-ruby', 'm-age', 'm-height', 'm-birth', 'm-first', 'm-second', 'm-color', 'm-personality', 'm-setting', 'm-song'];
+      editables.forEach(id => { const el = document.getElementById(id); if (el) el.contentEditable = isEditMode; });
+      document.getElementById('m-color-picker').style.display = isEditMode ? 'inline-block' : 'none';
+    }
+
+    async function saveCurrentModalData() {
+      if (!activeModalId || !isEditMode) return;
+      const c = characters.find(x => x.id === activeModalId);
+      if (!c) return;
+      c.name = document.getElementById('m-name').innerText;
+      c.ruby = document.getElementById('m-ruby').innerText;
+      c.age = document.getElementById('m-age').innerText;
+      c.height = document.getElementById('m-height').innerText;
+      c.birth = document.getElementById('m-birth').innerText;
+      c.firstPerson = document.getElementById('m-first').innerText;
+      c.secondPerson = document.getElementById('m-second').innerText;
+      
+      const newColor = document.getElementById('m-color').innerText;
+      c.color = newColor;
+      document.getElementById('m-color-dot').style.backgroundColor = newColor !== '-' ? newColor : 'transparent';
+
+      c.personality = document.getElementById('m-personality').innerText;
+      c.setting = document.getElementById('m-setting').innerText;
+      c.song = document.getElementById('m-song').innerText;
+      c.tags = document.getElementById('m-tags-input').value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      await saveData();
+    }
+
+    async function deleteGalleryImg(event, idx) {
+      event.stopPropagation();
+      if (!activeModalId) return;
+      const c = characters.find(x => x.id === activeModalId);
+      if (c && c.gallery) {
+        c.gallery.splice(idx, 1);
+        await saveData();
+        renderModalGallery(c.gallery);
+      }
+    }
+
+    async function addNewCharacter() {
+      const newId = Date.now().toString();
+      const newChar = {
+        id: newId, createdAt: Date.now(), tags: ["MAIN"],
+        name: "新規キャラ", ruby: "しんき きゃら", age: "16歳", height: "160cm", birth: "1月1日",
+        firstPerson: "私", secondPerson: "あなた", color: "#6366f1",
+        personality: "", setting: "", song: "",
+        icon: "https://via.placeholder.com/150", gallery: []
+      };
+      characters.push(newChar);
+      await saveData();
+      renderTagTabs(); renderGrid();
+      openDetailModal(newId);
+    }
+
+    async function deleteCurrentCharacter() {
+      if (!activeModalId) return;
+      if (!confirm("本当にこのキャラクターを削除しますか？ (関連する相関関係も一緒に消去されます)")) return;
+      
+      // キャラ削除
+      characters = characters.filter(x => x.id !== activeModalId);
+      // 関連する相関図データも一緒に自動クリーンアップ
+      relations = relations.filter(r => r.from !== activeModalId && r.to !== activeModalId);
+      
+      await saveData();
+      closeDetailModal();
+    }
+  </script>
+</body>
+</html>
