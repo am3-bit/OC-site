@@ -140,7 +140,7 @@
     <!-- 相関図セクション -->
     <section id="relations-section" class="section-view">
       <div class="relation-builder edit-controls">
-        <div style="font-size: 12px; font-weight: bold; color: var(--accent-color);">🔗 キャラ同士の関係性を追加・更新</div>
+        <div style="font-size: 12px; font-weight: bold; color: var(--accent-color);">🔗 キャラ同士の関係性を追加</div>
         <div class="relation-row">
           <select class="select-input" id="rel-from"></select>
           <span style="font-size: 14px; color: var(--accent-color); font-weight: bold;">⇄</span>
@@ -148,7 +148,7 @@
         </div>
         <input type="text" class="text-input" id="rel-label1" placeholder="⬆️ 左のキャラ → 右のキャラへの感情・設定">
         <input type="text" class="text-input" id="rel-label2" placeholder="⬇️ 右のキャラ → 左のキャラへの感情・設定">
-        <button class="file-btn" onclick="saveRelation()">関係性を保存する</button>
+        <button class="file-btn" onclick="saveRelation()">関係性を追加する</button>
       </div>
 
       <div class="controls-bar" style="margin-bottom: 12px;">
@@ -494,6 +494,7 @@
       renderRelations();
     }
 
+    // 全体相関図表示
     function renderRelations() {
       const box = document.getElementById('relations-container');
       box.innerHTML = '';
@@ -521,22 +522,29 @@
         const card = document.createElement('div');
         card.className = 'content-card';
         card.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="font-size:13px; font-weight:bold;">
-              <span style="color:var(--accent-color);">${fromChar.name}</span> ⇄ <span style="color:var(--accent-color);">${toChar.name}</span>
-            </div>
-            ${isEditMode ? `<button onclick="deleteRelation(${idx})" style="background:none; border:none; color:var(--danger-color); font-size:11px; cursor:pointer; font-weight:bold;">削除</button>` : ''}
+          <!-- 🌟 ご要望のレイアウト構成：上文 ➔ キャラA ⇄ キャラB ➔ 下文 -->
+          <div style="margin-bottom:6px; font-size:12px; color:var(--text-main); text-align:center; background:rgba(99,102,241,0.1); padding:6px 8px; border-radius:6px; border:1px dashed var(--border-color);">
+            <span style="font-size:10px; color:var(--text-sub); display:block; margin-bottom:2px;">⬆️ ${fromChar.name} → ${toChar.name}</span>
+            ${r.label1 ? r.label1 : '<span style="color:var(--text-sub);">（未設定）</span>'}
           </div>
-          <div style="margin-top:8px; display:flex; flex-direction:column; gap:6px; font-size:12px;">
-            <div style="background:rgba(99,102,241,0.1); border-left:3px solid var(--accent-color); padding:6px 8px; border-radius:4px;">
-              <span style="color:var(--text-sub); font-size:10px; display:block;">⬆️ ${fromChar.name} → ${toChar.name}</span>
-              ${r.label1 ? r.label1 : '<span style="color:var(--text-sub);">（設定なし）</span>'}
+
+          <div style="display:flex; justify-content:space-between; align-items:center; padding: 4px 0;">
+            <div style="font-size:14px; font-weight:bold; width: 100%; text-align: center; display: flex; justify-content: center; align-items: center; gap: 10px;">
+              <span style="color:var(--accent-color);">${fromChar.name}</span>
+              <span style="color:var(--text-sub);">⇄</span>
+              <span style="color:var(--accent-color);">${toChar.name}</span>
             </div>
-            <div style="background:rgba(99,102,241,0.1); border-left:3px solid var(--accent-color); padding:6px 8px; border-radius:4px;">
-              <span style="color:var(--text-sub); font-size:10px; display:block;">⬇️ ${toChar.name} → ${fromChar.name}</span>
-              ${r.label2 ? r.label2 : '<span style="color:var(--text-sub);">（設定なし）</span>'}
+            <div style="display:flex; gap: 6px;">
+              ${isEditMode ? `<button onclick="editRelation(${idx})" style="background:var(--accent-color); border:none; color:white; padding:4px 8px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:bold;">編集</button>` : ''}
+              ${isEditMode ? `<button onclick="deleteRelation(${idx})" style="background:var(--danger-color); border:none; color:white; padding:4px 8px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:bold;">削除</button>` : ''}
             </div>
           </div>
+
+          <div style="margin-top:6px; font-size:12px; color:var(--text-main); text-align:center; background:rgba(99,102,241,0.1); padding:6px 8px; border-radius:6px; border:1px dashed var(--border-color);">
+            <span style="font-size:10px; color:var(--text-sub); display:block; margin-bottom:2px;">⬇️ ${toChar.name} → ${fromChar.name}</span>
+            ${r.label2 ? r.label2 : '<span style="color:var(--text-sub);">（未設定）</span>'}
+          </div>
+
           <div style="margin-top:10px; border-top:1px solid var(--border-color); padding-top:8px;">
             <div style="font-size:10px; color:var(--text-sub); margin-bottom:2px;">この2人のイメソン:</div>
             ${pairSongsHtml}
@@ -550,6 +558,22 @@
         box.appendChild(card);
       });
       if (box.innerHTML === '') box.innerHTML = `<div style="text-align:center; color:var(--text-sub); margin-top:30px; font-size:13px;">該当する関係性はありません</div>`;
+    }
+
+    // 🌟 相関図の書き直し（編集）機能
+    async function editRelation(idx) {
+      const r = relations[idx];
+      const newLabel1 = prompt(`[${characters.find(c => c.id === r.from)?.name} → ${characters.find(c => c.id === r.to)?.name}] の文章を入力:`, r.label1 || '');
+      if (newLabel1 === null) return; // キャンセルされたら何もしない
+
+      const newLabel2 = prompt(`[${characters.find(c => c.id === r.to)?.name} → ${characters.find(c => c.id === r.from)?.name}] の文章を入力:`, r.label2 || '');
+      if (newLabel2 === null) return;
+
+      r.label1 = newLabel1.trim();
+      r.label2 = newLabel2.trim();
+
+      await saveData();
+      renderRelations();
     }
 
     async function addPairSong(relIdx) {
@@ -691,8 +715,9 @@
         const myText = isFrom ? r.label1 : r.label2;
         const targetText = isFrom ? r.label2 : r.label1;
 
-        li.innerHTML = `⇄ <strong style="color:var(--accent-color);">${targetName}</strong> との関係:<br>
-          <div style="margin-top:4px; display:flex; flex-direction:column; gap:4px;">
+        li.innerHTML = `
+          <div style="font-weight:bold; color:var(--accent-color); margin-bottom:4px;">${char.name} ⇄ ${targetName}</div>
+          <div style="display:flex; flex-direction:column; gap:4px;">
             <div style="background:rgba(0,0,0,0.2); padding:4px 6px; border-radius:4px;">⬆️ ${char.name} → ${targetName}: ${myText || '（なし）'}</div>
             <div style="background:rgba(0,0,0,0.2); padding:4px 6px; border-radius:4px;">⬇️ ${targetName} → ${char.name}: ${targetText || '（なし）'}</div>
           </div>`;
