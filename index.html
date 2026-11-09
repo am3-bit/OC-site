@@ -140,15 +140,15 @@
     <!-- 相関図セクション -->
     <section id="relations-section" class="section-view">
       <div class="relation-builder edit-controls">
-        <div style="font-size: 12px; font-weight: bold; color: var(--accent-color);">🔗 キャラ同士の関係性を追加・更新 (両方向)</div>
+        <div style="font-size: 12px; font-weight: bold; color: var(--accent-color);">🔗 キャラ同士の関係性を追加・更新</div>
         <div class="relation-row">
           <select class="select-input" id="rel-from"></select>
           <span style="font-size: 14px; color: var(--accent-color); font-weight: bold;">⇄</span>
           <select class="select-input" id="rel-to"></select>
         </div>
-        <!-- 🌟 2つの文章・設定欄 -->
-        <input type="text" class="text-input" id="rel-label1" placeholder="1つ目の文章欄 (例: お互い意識している、幼馴染)">
-        <input type="text" class="text-input" id="rel-label2" placeholder="2つ目の文章欄 (例: 喧嘩するほど仲が良い、秘密の共有)">
+        <!-- 🌟 上下の関係性入力欄 -->
+        <input type="text" class="text-input" id="rel-label1" placeholder="⬆️ 左のキャラ → 右のキャラへの感情・設定">
+        <input type="text" class="text-input" id="rel-label2" placeholder="⬇️ 右のキャラ → 左のキャラへの感情・設定">
         <button class="file-btn" onclick="saveRelation()">関係性を保存する</button>
       </div>
 
@@ -246,13 +246,11 @@
             characters = found.data.characters || [];
             relations = found.data.relations || [];
             
-            // 旧バージョンの変換補正
             characters.forEach(c => {
               if (!c.songs) c.songs = [];
             });
             relations.forEach(r => {
               if (!r.songs) r.songs = [];
-              // labelが文字列の古いデータをlabel1に移行
               if (r.label && !r.label1) {
                 r.label1 = r.label;
                 r.label2 = '';
@@ -415,14 +413,12 @@
       });
     }
 
-    // イメソンまとめ（個人＋ペア両方）
     function renderPlaylist() {
       const box = document.getElementById('playlist-container');
       box.innerHTML = '';
       
       let hasSong = false;
 
-      // 個人のイメソン
       characters.forEach(c => {
         if (c.songs && c.songs.length > 0) {
           hasSong = true;
@@ -439,7 +435,6 @@
         }
       });
 
-      // ペアのイメソン
       relations.forEach(r => {
         if (r.songs && r.songs.length > 0) {
           hasSong = true;
@@ -484,10 +479,11 @@
       if (from === to) return alert("違うキャラクターを選んでください");
       if (!label1 && !label2) return alert("少なくとも1つは文章を入力してください");
       
-      // 既存チェック (双方向なので逆順のペアも同じとみなす)
       let existing = relations.find(r => (r.from === from && r.to === to) || (r.from === to && r.to === from));
       
       if (existing) {
+        existing.from = from;
+        existing.to = to;
         existing.label1 = label1;
         existing.label2 = label2;
       } else {
@@ -533,11 +529,18 @@
             </div>
             ${isEditMode ? `<button onclick="deleteRelation(${idx})" style="background:none; border:none; color:var(--danger-color); font-size:11px; cursor:pointer; font-weight:bold;">削除</button>` : ''}
           </div>
-          <div style="margin-top:6px; color:var(--text-main); font-size:13px; background:rgba(0,0,0,0.2); padding:8px; border-radius:6px; display:flex; flexDirection:column; gap:4px;">
-            ${r.label1 ? `<div>・ ${r.label1}</div>` : ''}
-            ${r.label2 ? `<div>・ ${r.label2}</div>` : ''}
+          <!-- 🌟 上下分割された分かりやすい表示 -->
+          <div style="margin-top:8px; display:flex; flex-direction:column; gap:6px; font-size:12px;">
+            <div style="background:rgba(99,102,241,0.1); border-left:3px solid var(--accent-color); padding:6px 8px; border-radius:4px;">
+              <span style="color:var(--text-sub); font-size:10px; display:block;">⬆️ ${fromChar.name} → ${toChar.name}</span>
+              ${r.label1 ? r.label1 : '<span style="color:var(--text-sub);">（設定なし）</span>'}
+            </div>
+            <div style="background:rgba(99,102,241,0.1); border-left:3px solid var(--accent-color); padding:6px 8px; border-radius:4px;">
+              <span style="color:var(--text-sub); font-size:10px; display:block;">⬇️ ${toChar.name} → ${fromChar.name}</span>
+              ${r.label2 ? r.label2 : '<span style="color:var(--text-sub);">（設定なし）</span>'}
+            </div>
           </div>
-          <div style="margin-top:8px;">
+          <div style="margin-top:10px; border-top:1px solid var(--border-color); padding-top:8px;">
             <div style="font-size:10px; color:var(--text-sub); margin-bottom:2px;">この2人のイメソン:</div>
             ${pairSongsHtml}
             <div class="edit-controls" style="margin-top:6px; gap:4px;">
@@ -671,6 +674,7 @@
       }
     }
 
+    // キャラ個別モーダル内の相関図（上下の向きを正しく表示）
     function renderModalRelations(char) {
       const listEl = document.getElementById('m-relations-list');
       listEl.innerHTML = '';
@@ -683,12 +687,21 @@
 
       myRels.forEach(r => {
         const li = document.createElement('li');
-        const targetId = r.from === char.id ? r.to : r.from;
+        const isFrom = r.from === char.id;
+        const targetId = isFrom ? r.to : r.from;
         const target = characters.find(x => x.id === targetId);
-        
-        li.innerHTML = `⇄ <strong style="color:var(--accent-color);">${target ? target.name : '不明'}</strong> との関係:<br>
-          ${r.label1 ? `・ ${r.label1}<br>` : ''}
-          ${r.label2 ? `・ ${r.label2}` : ''}`;
+        const targetName = target ? target.name : '不明';
+
+        // 自分がfromなら label1が「自分→相手」、label2が「相手→自分」
+        // 自分がtoなら逆になるのでそれを綺麗に調整
+        const myText = isFrom ? r.label1 : r.label2;
+        const targetText = isFrom ? r.label2 : r.label1;
+
+        li.innerHTML = `⇄ <strong style="color:var(--accent-color);">${targetName}</strong> との関係:<br>
+          <div style="margin-top:4px; display:flex; flex-direction:column; gap:4px;">
+            <div style="background:rgba(0,0,0,0.2); padding:4px 6px; border-radius:4px;">⬆️ ${char.name} → ${targetName}: ${myText || '（なし）'}</div>
+            <div style="background:rgba(0,0,0,0.2); padding:4px 6px; border-radius:4px;">⬇️ ${targetName} → ${char.name}: ${targetText || '（なし）'}</div>
+          </div>`;
         listEl.appendChild(li);
       });
     }
@@ -770,7 +783,7 @@
 
       c.personality = document.getElementById('m-personality').innerText;
       c.setting = document.getElementById('m-setting').innerText;
-      c.tags = document.getElementById('m-tags-input').value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      c.tags = document.getElementById('m-tags-input`.value.split(',').map(s => s.trim()).filter(s => s.length > 0);
       await saveData();
     }
 
