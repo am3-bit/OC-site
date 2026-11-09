@@ -146,7 +146,6 @@
           <span style="font-size: 14px; color: var(--accent-color); font-weight: bold;">⇄</span>
           <select class="select-input" id="rel-to"></select>
         </div>
-        <!-- 🌟 上下の関係性入力欄 -->
         <input type="text" class="text-input" id="rel-label1" placeholder="⬆️ 左のキャラ → 右のキャラへの感情・設定">
         <input type="text" class="text-input" id="rel-label2" placeholder="⬇️ 右のキャラ → 左のキャラへの感情・設定">
         <button class="file-btn" onclick="saveRelation()">関係性を保存する</button>
@@ -495,7 +494,6 @@
       renderRelations();
     }
 
-    // 全体相関図表示
     function renderRelations() {
       const box = document.getElementById('relations-container');
       box.innerHTML = '';
@@ -529,7 +527,6 @@
             </div>
             ${isEditMode ? `<button onclick="deleteRelation(${idx})" style="background:none; border:none; color:var(--danger-color); font-size:11px; cursor:pointer; font-weight:bold;">削除</button>` : ''}
           </div>
-          <!-- 🌟 上下分割された分かりやすい表示 -->
           <div style="margin-top:8px; display:flex; flex-direction:column; gap:6px; font-size:12px;">
             <div style="background:rgba(99,102,241,0.1); border-left:3px solid var(--accent-color); padding:6px 8px; border-radius:4px;">
               <span style="color:var(--text-sub); font-size:10px; display:block;">⬆️ ${fromChar.name} → ${toChar.name}</span>
@@ -674,7 +671,6 @@
       }
     }
 
-    // キャラ個別モーダル内の相関図（上下の向きを正しく表示）
     function renderModalRelations(char) {
       const listEl = document.getElementById('m-relations-list');
       listEl.innerHTML = '';
@@ -692,8 +688,6 @@
         const target = characters.find(x => x.id === targetId);
         const targetName = target ? target.name : '不明';
 
-        // 自分がfromなら label1が「自分→相手」、label2が「相手→自分」
-        // 自分がtoなら逆になるのでそれを綺麗に調整
         const myText = isFrom ? r.label1 : r.label2;
         const targetText = isFrom ? r.label2 : r.label1;
 
@@ -783,7 +777,7 @@
 
       c.personality = document.getElementById('m-personality').innerText;
       c.setting = document.getElementById('m-setting').innerText;
-      c.tags = document.getElementById('m-tags-input`.value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      c.tags = document.getElementById('m-tags-input').value.split(',').map(s => s.trim()).filter(s => s.length > 0);
       await saveData();
     }
 
