@@ -785,8 +785,8 @@
       }
     }
 
-    function applyEditableState() {
-      const editables = ['m-name', 'm-ruby', 'm-age', 'm-height', 'm-birth', 'm-first', 'm-second', 'm-color', 'm-personality', 'm-setting'];
+   function applyEditableState() {
+      const editables = ['m-name', 'm-ruby', 'm-age', 'm-height', 'm-birth', 'm-first', 'm-second', 'm-gender', 'm-color', 'm-personality', 'm-setting']; // 👈 'm-gender' を追加！
       editables.forEach(id => { const el = document.getElementById(id); if (el) el.contentEditable = isEditMode; });
       document.getElementById('m-color-picker').style.display = isEditMode ? 'inline-block' : 'none';
     }
