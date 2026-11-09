@@ -116,7 +116,7 @@
   <main class="container">
     <div class="tabs-bar">
       <button class="tab-nav-btn active" onclick="switchTab('chars')">キャラクター</button>
-      <button class="tab-nav-btn" onclick="switchTab('playlist')">イメソンまとめ</button>
+      <button class="tab-nav-btn" onclick="switchTab('playlist')">イメージソング</button>
       <button class="tab-nav-btn" onclick="switchTab('relations')">相関図</button>
     </div>
 
@@ -125,10 +125,11 @@
         <div class="sort-row">
           <span>並び替え</span>
           <select class="sort-select" id="sort-select" onchange="renderGrid()">
-            <option value="default">追加順 (デフォルト)</option>
+            <option value="default">追加順</option>
             <option value="name-asc">五十音順</option>
             <option value="height-asc">身長順 (低い順)</option>
             <option value="height-desc">身長順 (高い順)</option>
+             <option value="age-asc">年齢順 (若い順)</option>
             <option value="birthday-asc">誕生日順</option>
           </select>
         </div>
@@ -185,6 +186,7 @@
         <div class="profile-meta-item"><span class="meta-lbl">誕生日:</span><span class="meta-val" id="m-birth" contenteditable="false" onblur="saveCurrentModalData()">-</span></div>
         <div class="profile-meta-item"><span class="meta-lbl">一人称:</span><span class="meta-val" id="m-first" contenteditable="false" onblur="saveCurrentModalData()">-</span></div>
         <div class="profile-meta-item"><span class="meta-lbl">二人称:</span><span class="meta-val" id="m-second" contenteditable="false" onblur="saveCurrentModalData()">-</span></div>
+        <div class="profile-meta-item"><span class="meta-lbl">性別:</span><span class="meta-val" id="m-gender" contenteditable="false" onblur="saveCurrentModalData()">-</span></div>
         <div class="profile-meta-item">
           <span class="meta-lbl">イメカラ:</span>
           <div class="color-picker-wrapper">
@@ -206,7 +208,7 @@
       <div><div class="section-title">設定・背景</div><div class="text-block-box" id="m-setting" contenteditable="false" onblur="saveCurrentModalData()"></div></div>
       
       <div>
-        <div class="section-title">🎵 イメソン (個人)</div>
+        <div class="section-title">🎵 イメージソング</div>
         <div id="m-songs-list"></div>
         <div class="edit-controls" style="gap: 6px; margin-top: 8px;">
           <input type="text" class="text-input" id="new-song-title" placeholder="曲名">
@@ -399,6 +401,7 @@
       if (sortMode === 'name-asc') list.sort((a, b) => (a.ruby || a.name || '').localeCompare(b.ruby || b.name || '', 'ja'));
       else if (sortMode === 'height-asc') list.sort((a, b) => extractNum(a.height) - extractNum(b.height));
       else if (sortMode === 'height-desc') list.sort((a, b) => extractNum(b.height) - extractNum(a.height));
+      else if (sortMode === 'age-asc') list.sort((a, b) => extractNum(a.age) - extractNum(b.age));
       else if (sortMode === 'birthday-asc') list.sort((a, b) => (a.birth || '').localeCompare(b.birth || ''));
       else list.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
 
@@ -761,7 +764,7 @@
       isEditMode = !isEditMode;
       const btn = document.getElementById('lock-btn');
       if (isEditMode) {
-        const pass = prompt("編集パスワードを入力してください (初期: 1234):");
+        const pass = prompt("編集パスワードを入力してください:");
         if (pass === "1234") { 
           btn.innerText = "🔓 編集中"; 
           document.body.classList.add('edit-active'); 
@@ -824,7 +827,7 @@
       const newId = Date.now().toString();
       const newChar = {
         id: newId, createdAt: Date.now(), tags: ["MAIN"],
-        name: "新規キャラ", ruby: "しんき きゃら", age: "16歳", height: "160cm", birth: "1月1日",
+        name: "新規キャラ", ruby: "しんき きゃら", age: "歳", height: "cm", birth: "/",
         firstPerson: "私", secondPerson: "あなた", color: "#6366f1",
         personality: "", setting: "", songs: [],
         icon: "https://via.placeholder.com/150", gallery: []
