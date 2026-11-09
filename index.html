@@ -137,18 +137,18 @@
 
     <section id="playlist-section" class="section-view"><div id="playlist-container"></div></section>
     
+    <!-- 相関図セクション -->
     <section id="relations-section" class="section-view">
       <div class="relation-builder edit-controls">
-        <div style="font-size: 12px; font-weight: bold; color: var(--accent-color);">🔗 キャラ同士の関係性を追加・更新</div>
+        <div style="font-size: 12px; font-weight: bold; color: var(--accent-color);">🔗 キャラ同士の関係性を追加・更新 (両方向)</div>
         <div class="relation-row">
           <select class="select-input" id="rel-from"></select>
-          <select class="select-input" id="rel-dir" style="width: 70px;">
-            <option value="one">➔ (片道)</option>
-            <option value="both">⇄ (両方)</option>
-          </select>
+          <span style="font-size: 14px; color: var(--accent-color); font-weight: bold;">⇄</span>
           <select class="select-input" id="rel-to"></select>
         </div>
-        <input type="text" class="text-input" id="rel-label" placeholder="関係性 (例: 片思い、両思い、ライバルなど)">
+        <!-- 🌟 2つの文章・設定欄 -->
+        <input type="text" class="text-input" id="rel-label1" placeholder="1つ目の文章欄 (例: お互い意識している、幼馴染)">
+        <input type="text" class="text-input" id="rel-label2" placeholder="2つ目の文章欄 (例: 喧嘩するほど仲が良い、秘密の共有)">
         <button class="file-btn" onclick="saveRelation()">関係性を保存する</button>
       </div>
 
@@ -203,13 +203,12 @@
       <div><div class="section-title">性格</div><div class="text-block-box" id="m-personality" contenteditable="false" onblur="saveCurrentModalData()"></div></div>
       <div><div class="section-title">設定・背景</div><div class="text-block-box" id="m-setting" contenteditable="false" onblur="saveCurrentModalData()"></div></div>
       
-      <!-- 🎯 イメソン追加エリア（開いているキャラ専用） -->
       <div>
-        <div class="section-title">🎵 イメソン</div>
+        <div class="section-title">🎵 イメソン (個人)</div>
         <div id="m-songs-list"></div>
         <div class="edit-controls" style="gap: 6px; margin-top: 8px;">
-          <input type="text" class="text-input" id="new-song-title" placeholder="曲名 (例: マルベリー / Be My Guest)">
-          <input type="text" class="text-input" id="new-song-url" placeholder="YouTube URLなど (任意)" oninput="autoFillSongTitle(this.value)">
+          <input type="text" class="text-input" id="new-song-title" placeholder="曲名">
+          <input type="text" class="text-input" id="new-song-url" placeholder="URLなど (任意)">
           <button class="file-btn" onclick="addSongToCharacter()">+ このキャラにイメソンを追加</button>
         </div>
       </div>
@@ -247,12 +246,16 @@
             characters = found.data.characters || [];
             relations = found.data.relations || [];
             
+            // 旧バージョンの変換補正
             characters.forEach(c => {
-              if (typeof c.song === 'string' && c.song.trim() !== '') {
-                c.songs = [{ title: c.song, url: c.song.startsWith('http') ? c.song : '' }];
-                delete c.song;
-              } else if (!c.songs) {
-                c.songs = [];
+              if (!c.songs) c.songs = [];
+            });
+            relations.forEach(r => {
+              if (!r.songs) r.songs = [];
+              // labelが文字列の古いデータをlabel1に移行
+              if (r.label && !r.label1) {
+                r.label1 = r.label;
+                r.label2 = '';
               }
             });
           }
@@ -412,29 +415,54 @@
       });
     }
 
+    // イメソンまとめ（個人＋ペア両方）
     function renderPlaylist() {
       const box = document.getElementById('playlist-container');
       box.innerHTML = '';
+      
+      let hasSong = false;
+
+      // 個人のイメソン
       characters.forEach(c => {
         if (c.songs && c.songs.length > 0) {
+          hasSong = true;
           const card = document.createElement('div');
           card.className = 'content-card';
-          
           let songsHtml = c.songs.map(s => `
             <div style="margin-top:4px;">
               🎵 <strong>${s.title}</strong>
               ${s.url ? `<a href="${s.url}" target="_blank" rel="noopener noreferrer" class="song-link" style="margin-left:8px;">▶ 試聴する</a>` : ''}
             </div>
           `).join('');
-
-          card.innerHTML = `
-            <div style="font-weight:bold; font-size:14px; margin-bottom:6px; color:var(--accent-color);">${c.name}</div>
-            <div style="color:var(--text-main); font-size:13px; line-height:1.5;">${songsHtml}</div>
-          `;
+          card.innerHTML = `<div style="font-weight:bold; font-size:14px; margin-bottom:6px; color:var(--accent-color);">${c.name} (個人)</div><div style="color:var(--text-main); font-size:13px;">${songsHtml}</div>`;
           box.appendChild(card);
         }
       });
-      if (box.innerHTML === '') box.innerHTML = `<div style="text-align:center; color:var(--text-sub); margin-top:30px; font-size:13px;">登録されているイメソンはありません</div>`;
+
+      // ペアのイメソン
+      relations.forEach(r => {
+        if (r.songs && r.songs.length > 0) {
+          hasSong = true;
+          const c1 = characters.find(x => x.id === r.from);
+          const c2 = characters.find(x => x.id === r.to);
+          if (!c1 || !c2) return;
+
+          const card = document.createElement('div');
+          card.className = 'content-card';
+          let songsHtml = r.songs.map(s => `
+            <div style="margin-top:4px;">
+              🎵 <strong>${s.title}</strong>
+              ${s.url ? `<a href="${s.url}" target="_blank" rel="noopener noreferrer" class="song-link" style="margin-left:8px;">▶ 試聴する</a>` : ''}
+            </div>
+          `).join('');
+          card.innerHTML = `<div style="font-weight:bold; font-size:14px; margin-bottom:6px; color:var(--accent-color);">🔗 ${c1.name} ⇄ ${c2.name} (ペアイメソン)</div><div style="color:var(--text-main); font-size:13px;">${songsHtml}</div>`;
+          box.appendChild(card);
+        }
+      });
+
+      if (!hasSong) {
+        box.innerHTML = `<div style="text-align:center; color:var(--text-sub); margin-top:30px; font-size:13px;">登録されているイメソンはありません</div>`;
+      }
     }
 
     function populateRelationSelects() {
@@ -450,23 +478,28 @@
     async function saveRelation() {
       const from = document.getElementById('rel-from').value;
       const to = document.getElementById('rel-to').value;
-      const dir = document.getElementById('rel-dir').value;
-      const label = document.getElementById('rel-label').value.trim();
-      if (from === to) return alert("違うキャラクターを選んでください");
-      if (!label) return alert("関係性を入力してください");
+      const label1 = document.getElementById('rel-label1').value.trim();
+      const label2 = document.getElementById('rel-label2').value.trim();
       
-      const existing = relations.find(r => r.from === from && r.to === to);
+      if (from === to) return alert("違うキャラクターを選んでください");
+      if (!label1 && !label2) return alert("少なくとも1つは文章を入力してください");
+      
+      // 既存チェック (双方向なので逆順のペアも同じとみなす)
+      let existing = relations.find(r => (r.from === from && r.to === to) || (r.from === to && r.to === from));
+      
       if (existing) {
-        existing.label = label;
-        existing.dir = dir;
+        existing.label1 = label1;
+        existing.label2 = label2;
       } else {
-        relations.push({ from, to, label, dir });
+        relations.push({ from, to, label1, label2, songs: [] });
       }
       await saveData();
-      document.getElementById('rel-label').value = '';
+      document.getElementById('rel-label1').value = '';
+      document.getElementById('rel-label2').value = '';
       renderRelations();
     }
 
+    // 全体相関図表示
     function renderRelations() {
       const box = document.getElementById('relations-container');
       box.innerHTML = '';
@@ -482,22 +515,61 @@
         const toChar = characters.find(c => c.id === r.to);
         if (!fromChar || !toChar) return;
         
-        const arrowStr = r.dir === 'both' ? '⇄' : '➔';
+        if (!r.songs) r.songs = [];
+
+        let pairSongsHtml = r.songs.map((s, sIdx) => `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; font-size:12px; background:rgba(0,0,0,0.3); padding:4px 8px; border-radius:4px;">
+            <div>🎵 <strong>${s.title}</strong> ${s.url ? `<a href="${s.url}" target="_blank" rel="noopener noreferrer" class="song-link" style="margin-left:6px;">▶ 試聴</a>` : ''}</div>
+            ${isEditMode ? `<button onclick="deletePairSong(${idx}, ${sIdx})" style="background:none; border:none; color:var(--danger-color); font-size:10px; cursor:pointer;">削除</button>` : ''}
+          </div>
+        `).join('');
 
         const card = document.createElement('div');
         card.className = 'content-card';
         card.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="font-size:13px; font-weight:bold;">
-              <span style="color:var(--accent-color);">${fromChar.name}</span> ${arrowStr} <span style="color:var(--accent-color);">${toChar.name}</span>
+              <span style="color:var(--accent-color);">${fromChar.name}</span> ⇄ <span style="color:var(--accent-color);">${toChar.name}</span>
             </div>
             ${isEditMode ? `<button onclick="deleteRelation(${idx})" style="background:none; border:none; color:var(--danger-color); font-size:11px; cursor:pointer; font-weight:bold;">削除</button>` : ''}
           </div>
-          <div style="margin-top:6px; color:var(--text-main); font-size:13px; background:rgba(0,0,0,0.2); padding:8px; border-radius:6px;">${r.label}</div>
+          <div style="margin-top:6px; color:var(--text-main); font-size:13px; background:rgba(0,0,0,0.2); padding:8px; border-radius:6px; display:flex; flexDirection:column; gap:4px;">
+            ${r.label1 ? `<div>・ ${r.label1}</div>` : ''}
+            ${r.label2 ? `<div>・ ${r.label2}</div>` : ''}
+          </div>
+          <div style="margin-top:8px;">
+            <div style="font-size:10px; color:var(--text-sub); margin-bottom:2px;">この2人のイメソン:</div>
+            ${pairSongsHtml}
+            <div class="edit-controls" style="margin-top:6px; gap:4px;">
+              <input type="text" class="text-input" id="pair-song-title-${idx}" placeholder="曲名">
+              <input type="text" class="text-input" id="pair-song-url-${idx}" placeholder="URL (任意)">
+              <button class="file-btn" style="padding:4px;" onclick="addPairSong(${idx})">+ ペアイメソンを追加</button>
+            </div>
+          </div>
         `;
         box.appendChild(card);
       });
       if (box.innerHTML === '') box.innerHTML = `<div style="text-align:center; color:var(--text-sub); margin-top:30px; font-size:13px;">該当する関係性はありません</div>`;
+    }
+
+    async function addPairSong(relIdx) {
+      const titleInput = document.getElementById(`pair-song-title-${relIdx}`);
+      const urlInput = document.getElementById(`pair-song-url-${relIdx}`);
+      const title = titleInput.value.trim();
+      const url = urlInput.value.trim();
+
+      if (!title) return alert("曲名を入力してください");
+      if (!relations[relIdx].songs) relations[relIdx].songs = [];
+
+      relations[relIdx].songs.push({ title, url });
+      await saveData();
+      renderRelations();
+    }
+
+    async function deletePairSong(relIdx, songIdx) {
+      relations[relIdx].songs.splice(songIdx, 1);
+      await saveData();
+      renderRelations();
     }
 
     async function deleteRelation(idx) {
@@ -509,7 +581,7 @@
     }
 
     function openDetailModal(id) {
-      activeModalId = id; // 🎯 開いているキャラのIDを保持
+      activeModalId = id;
       const c = characters.find(x => x.id === id);
       if (!c) return;
       document.getElementById('m-icon').src = c.icon || '';
@@ -544,7 +616,6 @@
       applyEditableState();
     }
 
-    // 開いているキャラのイメソンを表示
     function renderModalSongs(char) {
       const box = document.getElementById('m-songs-list');
       box.innerHTML = '';
@@ -561,7 +632,7 @@
         item.innerHTML = `
           <div>
             <span class="song-title">🎵 ${s.title}</span>
-            ${s.url ? `<br><a href="${s.url}" target="_blank" rel="noopener noreferrer" class="song-link">▶ 試聴する (YouTube等)</a>` : ''}
+            ${s.url ? `<br><a href="${s.url}" target="_blank" rel="noopener noreferrer" class="song-link">▶ 試聴する</a>` : ''}
           </div>
           ${isEditMode ? `<button onclick="deleteSongFromCharacter(${idx})" style="background:none; border:none; color:var(--danger-color); font-size:11px; cursor:pointer; font-weight:bold;">削除</button>` : ''}
         `;
@@ -569,14 +640,6 @@
       });
     }
 
-    function autoFillSongTitle(val) {
-      const titleInput = document.getElementById('new-song-title');
-      if (val.startsWith('http') && (!titleInput.value || titleInput.value.startsWith('http'))) {
-        titleInput.value = val;
-      }
-    }
-
-    // 🎯 正しいキャラ（activeModalId）にイメソンを追加する関数
     async function addSongToCharacter() {
       if (!activeModalId) return;
       const c = characters.find(x => x.id === activeModalId);
@@ -587,7 +650,7 @@
       const title = titleInput.value.trim();
       const url = urlInput.value.trim();
 
-      if (!title) return alert("曲名（またはリンク）を入力してください");
+      if (!title) return alert("曲名を入力してください");
 
       if (!c.songs) c.songs = [];
       c.songs.push({ title, url });
@@ -598,7 +661,6 @@
       renderModalSongs(c);
     }
 
-    // 🎯 開いているキャラからイメソンを削除
     async function deleteSongFromCharacter(idx) {
       if (!activeModalId) return;
       const c = characters.find(x => x.id === activeModalId);
@@ -621,17 +683,12 @@
 
       myRels.forEach(r => {
         const li = document.createElement('li');
-        const isBoth = r.dir === 'both';
-
-        if (r.from === char.id) {
-          const target = characters.find(x => x.id === r.to);
-          const arrow = isBoth ? '⇄' : '➔';
-          li.innerHTML = `${arrow} <strong style="color:var(--accent-color);">${target ? target.name : '不明'}</strong> へ: [ ${r.label} ] ${isBoth ? '(お互い)' : ''}`;
-        } else {
-          const target = characters.find(x => x.id === r.from);
-          const arrow = isBoth ? '⇄' : '⬅';
-          li.innerHTML = `${arrow} <strong style="color:var(--accent-color);">${target ? target.name : '不明'}</strong> から: [ ${r.label} ] ${isBoth ? '(お互い)' : ''}`;
-        }
+        const targetId = r.from === char.id ? r.to : r.from;
+        const target = characters.find(x => x.id === targetId);
+        
+        li.innerHTML = `⇄ <strong style="color:var(--accent-color);">${target ? target.name : '不明'}</strong> との関係:<br>
+          ${r.label1 ? `・ ${r.label1}<br>` : ''}
+          ${r.label2 ? `・ ${r.label2}` : ''}`;
         listEl.appendChild(li);
       });
     }
